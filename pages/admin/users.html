@@ -227,7 +227,9 @@
               </div>
             </div>
           </td>
-          <td class="td-sub">${u.school_name || <span style="color:var(--text-light)">—</span>}</td>
+          <td class="td-sub">
+            ${u.school_name || '<span style="color:var(--text-light)">—</span>'}
+          </td>
           <td>
             <span class="badge ${u.is_active ? 'badge-success' : 'badge-warning'}">
               ${u.is_active ? '✅ Active' : '⏳ Inactive'}
