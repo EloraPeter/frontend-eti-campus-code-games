@@ -10,7 +10,7 @@ function renderNavbar({ activePage = '' } = {}) {
     <nav class="navbar" id="main-navbar">
       <div class="container navbar-inner">
         <a href="/pages/index.html" class="navbar-logo">
-          <div class="logo-badge">ET</div>
+          <div class="logo-badge"><img src="../../assets/eti-logo.jpg"></div>
           <span>ETI</span>
         </a>
 
@@ -53,7 +53,7 @@ function renderFooter() {
         <div class="footer-grid">
           <div class="footer-brand">
             <div class="footer-logo">
-              <div class="logo-badge" style="width:30px;height:30px;font-size:0.85rem;">ET</div>
+              <div class="logo-badge" style="width:30px;height:30px;font-size:0.85rem;"><img src="../../assets/eti-logo.jpg"></div>
               <span>Elora Tech Institute</span>
             </div>
             <p class="footer-tagline">Empowering the next generation of tech innovators through competitions, learning, and community.</p>
@@ -99,7 +99,7 @@ function renderPageLoader() {
     <div class="page-loader" id="page-loader">
       <div class="pulse-logo">
         <div class="logo-badge" style="width:56px;height:56px;font-size:1.5rem;font-family:'Poppins',sans-serif;font-weight:800;background:var(--primary);color:#fff;border-radius:14px;display:grid;place-items:center;position:relative;overflow:hidden;">
-          ET
+          <img src="../../assets/eti-logo.jpg">
           <span style="position:absolute;bottom:-5px;right:-5px;width:18px;height:18px;background:var(--secondary);border-radius:4px;"></span>
         </div>
         <span style="font-family:'Montserrat',sans-serif;font-weight:600;font-size:.85rem;color:var(--text-light);letter-spacing:.08em;text-transform:uppercase;">Loading…</span>

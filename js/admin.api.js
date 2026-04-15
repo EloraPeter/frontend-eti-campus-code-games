@@ -137,7 +137,7 @@ function renderAdminNavbar(activePage = '') {
     <nav class="navbar admin-navbar" id="main-navbar">
       <div class="container navbar-inner">
         <a href="/pages/admin/dashboard.html" class="navbar-logo">
-          <div class="logo-badge admin-badge">ET</div>
+          <div class="logo-badge admin-badge"><img src="../../assets/eti-logo.jpg"></div>
           <span>ETI <span class="admin-tag">Admin</span></span>
         </a>
 
