@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register — ETI</title>
+  <link rel="stylesheet" href="../css/global.css" />
+  <link rel="stylesheet" href="../css/auth.css" />
+</head>
+<body>
+  <div id="navbar-mount"></div>
+
+  <main class="auth-page page-wrapper">
+    <div class="auth-layout">
+      <!-- LEFT PANEL -->
+      <div class="auth-panel-left" aria-hidden="true">
+        <div class="auth-panel-content">
+          <div class="auth-brand">
+            <div class="logo-badge" style="width:48px;height:48px;font-size:1.2rem;font-family:'Poppins',sans-serif;font-weight:800;background:rgba(255,255,255,0.2);color:#fff;border-radius:12px;display:grid;place-items:center;">ET</div>
+            <span style="font-family:'Poppins',sans-serif;font-weight:800;font-size:1.4rem;color:#fff;">ETI</span>
+          </div>
+          <h2 class="auth-panel-title">Join the<br/>competition 🏆</h2>
+          <p class="auth-panel-sub">Register your account, pick your competition, and complete payment to secure your place.</p>
+          <div class="auth-panel-features">
+            <div class="apf-item">🎯 Pick a competition</div>
+            <div class="apf-item">📝 Fill in your details</div>
+            <div class="apf-item">💳 Complete payment to activate</div>
+          </div>
+          <div class="auth-circuit" aria-hidden="true">
+            <svg viewBox="0 0 300 250" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M30 120 H90 L120 80 H180 L210 120 H270" stroke="white" stroke-width="1.5" stroke-dasharray="6 3" opacity="0.25"/>
+              <circle cx="90" cy="120" r="4" fill="white" opacity="0.3"/>
+              <circle cx="180" cy="80" r="4" fill="white" opacity="0.3"/>
+              <circle cx="270" cy="120" r="4" fill="white" opacity="0.3"/>
+              <path d="M120 80 V30 H170" stroke="white" stroke-width="1.5" stroke-dasharray="6 3" opacity="0.25"/>
+              <path d="M210 120 V180 H260 V210" stroke="white" stroke-width="1.5" stroke-dasharray="6 3" opacity="0.25"/>
+              <rect x="150" y="14" width="40" height="20" rx="4" stroke="white" stroke-width="1.5" opacity="0.3"/>
+              <rect x="240" y="196" width="40" height="20" rx="4" stroke="white" stroke-width="1.5" opacity="0.3"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT PANEL -->
+      <div class="auth-panel-right">
+        <div class="auth-form-wrap">
+          <div class="auth-form-header">
+            <h1 class="auth-title">Create Account</h1>
+            <p class="text-muted text-sm">Already registered? <a href="./login.html" class="text-primary font-semibold">Sign in here</a></p>
+          </div>
+
+          <div class="payment-notice">
+            <span class="notice-icon">⚠️</span>
+            <span>Your account will be <strong>inactive</strong> until payment is completed. You'll be redirected to pay right after registration.</span>
+          </div>
+
+          <form id="register-form" novalidate autocomplete="on">
+
+            <!-- Step 1: Competition Selection -->
+            <div class="reg-section-title">Step 1 · Choose Competition</div>
+
+            <div id="comp-loading" style="text-align:center;padding:20px;color:var(--text-light);font-size:.88rem;">
+              <span class="spinner spinner-dark" style="display:inline-block;margin-right:8px;"></span> Loading competitions…
+            </div>
+            <div id="comp-error" class="hidden" style="font-size:.85rem;color:#e05252;padding:8px 0;">
+              Failed to load competitions. <button type="button" class="text-primary font-semibold" id="retry-comp-btn" style="cursor:pointer;">Retry</button>
+            </div>
+            <div class="competition-select-mini hidden" id="comp-list"></div>
+            <span class="form-error" id="comp-error-msg"></span>
+
+            <!-- Step 2: Account Info -->
+            <div class="reg-section-title">Step 2 · Account Details</div>
+
+            <div class="form-group">
+              <label class="form-label" for="email">Email Address <span style="color:#e05252">*</span></label>
+              <div class="input-wrapper">
+                <span class="input-icon">✉️</span>
+                <input type="email" id="email" name="email" class="form-input" placeholder="you@example.com" autocomplete="email" required />
+              </div>
+              <span class="form-error" id="email-error"></span>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="full_name">Full Name <span style="color:#e05252">*</span></label>
+              <div class="input-wrapper">
+                <span class="input-icon">🪪</span>
+                <input type="text" id="full_name" name="full_name" class="form-input" placeholder="Your full name" autocomplete="name" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="username">Username <span style="color:#e05252">*</span></label>
+              <div class="input-wrapper">
+                <span class="input-icon">👤</span>
+                <input type="text" id="username" name="username" class="form-input" placeholder="e.g. techstar_2025" autocomplete="username" required />
+              </div>
+              <span class="form-error" id="username-error"></span>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="password">Password <span style="color:#e05252">*</span></label>
+              <div class="input-wrapper">
+                <span class="input-icon">🔒</span>
+                <input type="password" id="password" name="password" class="form-input" placeholder="Min. 8 characters" autocomplete="new-password" required />
+                <button type="button" class="input-action" id="toggle-password">👁</button>
+              </div>
+              <span class="form-hint">At least 8 characters.</span>
+              <span class="form-error" id="password-error"></span>
+            </div>
+
+            <!-- Step 3: Personal Info (optional) -->
+            <div class="reg-section-title">Step 3 · Personal Info <span style="font-weight:400;text-transform:none;font-size:.78rem;color:var(--text-light);letter-spacing:0;">(Optional)</span></div>
+
+            <div class="form-group">
+              <label class="form-label" for="school_name">School / Institution</label>
+              <div class="input-wrapper">
+                <span class="input-icon">🏫</span>
+                <input type="text" id="school_name" name="school_name" class="form-input" placeholder="Your school name" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="phone">Phone Number</label>
+              <div class="input-wrapper">
+                <span class="input-icon">📱</span>
+                <input type="tel" id="phone" name="phone" class="form-input" placeholder="+234 800 000 0000" autocomplete="tel" />
+              </div>
+            </div>
+
+            <!-- Step 4: Payment Provider & Referral -->
+            <div class="reg-section-title">Step 4 Payment <span style="font-weight:400;text-transform:none;font-size:.78rem;color:var(--text-light);letter-spacing:0;">&amp; Referral</span></div>
+
+            <div class="form-group">
+              <label class="form-label">Choose a payment Provider <span style="color:#e05252">*</span></label>
+              <div class="provider-grid" id="provider-grid">
+                <div class="provider-option" data-val="paystack">
+                  <div class="provider-radio"></div>🌐 Paystack
+                </div>
+                <!--
+                <div class="provider-option" data-val="flutterwave">
+                  <div class="provider-radio"></div>🤝 Flutterwave
+                </div>
+              -->
+              </div>
+              <span class="form-error" id="provider-error"></span>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="referral_code">Referral Code</label>
+              <div class="input-wrapper">
+                <span class="input-icon">🎁</span>
+                <input type="text" id="referral_code" name="referral_code" class="form-input" placeholder="Optional referral code" />
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block btn-lg mt-3" id="register-btn">
+              Create Account & Pay →
+            </button>
+
+            <p class="text-center text-xs text-light mt-3">
+              By registering, you agree to ETI's terms of service and competition rules.
+            </p>
+          </form>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="toast-container" class="toast-container"></div>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/components.js"></script>
+  <script>
+    mountLayout({ page: 'register' });
+
+    let selectedCompId = null;
+    let selectedProvider = null;
+
+    // ---- LOAD COMPETITIONS ----
+    async function loadCompetitions() {
+      const loadEl = document.getElementById('comp-loading');
+      const errEl = document.getElementById('comp-error');
+      const listEl = document.getElementById('comp-list');
+
+      // Check if one was pre-selected from landing
+      const preSelected = CompetitionService.getSelected();
+
+      try {
+        const data = await CompetitionService.list();
+        const comps = data.competitions || [];
+
+        loadEl.classList.add('hidden');
+        errEl.classList.add('hidden');
+
+        if (!comps.length) {
+          listEl.innerHTML = '<p class="text-sm text-muted" style="padding:12px 0;">No competitions available right now.</p>';
+          listEl.classList.remove('hidden');
+          return;
+        }
+
+        listEl.innerHTML = comps.map(c => `
+          <div class="comp-option ${preSelected === c.id ? 'selected' : ''}" data-id="${c.id}">
+            <div class="comp-option-info">
+              <div class="comp-option-title">${c.title}</div>
+              <div class="comp-option-price">Entry: ${c.price || 'Free'}</div>
+            </div>
+            <div class="comp-check">${preSelected === c.id ? '✓' : ''}</div>
+          </div>
+        `).join('');
+
+        if (preSelected) selectedCompId = preSelected;
+        listEl.classList.remove('hidden');
+
+        listEl.querySelectorAll('.comp-option').forEach(opt => {
+          opt.addEventListener('click', () => {
+            listEl.querySelectorAll('.comp-option').forEach(o => {
+              o.classList.remove('selected');
+              o.querySelector('.comp-check').textContent = '';
+            });
+            opt.classList.add('selected');
+            opt.querySelector('.comp-check').textContent = '✓';
+            selectedCompId = opt.dataset.id;
+
+            const errMsg = document.getElementById('comp-error-msg');
+            errMsg.textContent = '';
+            errMsg.classList.remove('visible');
+          });
+        });
+
+      } catch (err) {
+        loadEl.classList.add('hidden');
+        errEl.classList.remove('hidden');
+      }
+    }
+
+    document.getElementById('retry-comp-btn')?.addEventListener('click', loadCompetitions);
+    loadCompetitions();
+
+    // ---- PROVIDER SELECTION ----
+    document.getElementById('provider-grid').querySelectorAll('.provider-option').forEach(opt => {
+      opt.addEventListener('click', () => {
+        document.querySelectorAll('.provider-option').forEach(o => o.classList.remove('selected'));
+        opt.classList.add('selected');
+        selectedProvider = opt.dataset.val;
+        const err = document.getElementById('provider-error');
+        err.textContent = ''; err.classList.remove('visible');
+      });
+    });
+
+    // ---- PASSWORD TOGGLE ----
+    document.getElementById('toggle-password').addEventListener('click', function() {
+      const pw = document.getElementById('password');
+      const isText = pw.type === 'text';
+      pw.type = isText ? 'password' : 'text';
+      this.textContent = isText ? '👁' : '🙈';
+    });
+
+    // ---- FORM SUBMIT ----
+    document.getElementById('register-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      // Validate competition
+      if (!selectedCompId) {
+        const err = document.getElementById('comp-error-msg');
+        err.textContent = 'Please select a competition to continue.';
+        err.classList.add('visible');
+        document.getElementById('comp-list').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        return;
+      }
+
+      const emailInput = document.getElementById('email');
+      const usernameInput = document.getElementById('username');
+      const passwordInput = document.getElementById('password');
+
+      const emailValid = validateField(emailInput, [Validators.required, Validators.email]);
+      const usernameValid = validateField(usernameInput, [Validators.required, Validators.minLength(3)]);
+      const passwordValid = validateField(passwordInput, [Validators.required, Validators.password]);
+
+      if (!emailValid || !usernameValid || !passwordValid) return;
+
+      if (!selectedProvider) {
+        const err = document.getElementById('provider-error');
+        err.textContent = 'Please select a payment provider.';
+        err.classList.add('visible');
+        return;
+      }
+
+      const btn = document.getElementById('register-btn');
+      setButtonLoading(btn, true);
+
+      const payload = {
+        competition_id: selectedCompId,
+        email: emailInput.value.trim(),
+        username: usernameInput.value.trim(),
+        password: passwordInput.value,
+        provider: selectedProvider,
+      };
+
+      const fullName = document.getElementById('full_name').value.trim();
+      const school = document.getElementById('school_name').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      const referral = document.getElementById('referral_code').value.trim();
+
+      if (fullName) payload.full_name = fullName;
+      if (school) payload.school_name = school;
+      if (phone) payload.phone = phone;
+      if (referral) payload.referral_code = referral;
+
+      try {
+        const data = await AuthService.register(payload);
+        Toast.success('Account created!', 'Redirecting you to complete payment…');
+        if (data.payment_link) {
+          setTimeout(() => { window.location.href = data.payment_link; }, 1200);
+        } else {
+          setTimeout(() => { window.location.href = './login.html'; }, 1200);
+        }
+      } catch (err) {
+        setButtonLoading(btn, false);
+        Toast.error('Registration failed', err.message || 'Something went wrong. Please try again.');
+      }
+    });
+  </script>
+</body>
+</html>

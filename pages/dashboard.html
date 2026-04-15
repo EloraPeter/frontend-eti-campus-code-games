@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — ETI</title>
+  <link rel="stylesheet" href="../css/global.css" />
+  <link rel="stylesheet" href="../css/dashboard.css" />
+</head>
+<body>
+  <div id="navbar-mount"></div>
+
+  <main class="page-wrapper">
+    <div class="container" style="padding-top:40px;padding-bottom:80px;">
+
+      <!-- GREETING -->
+      <div class="dash-greeting mb-8">
+        <div>
+          <h1 id="greeting-text">Welcome back 👋</h1>
+          <p class="text-muted mt-1" id="greeting-sub">Here's an overview of your competition journey.</p>
+        </div>
+        <a href="./profile.html" class="btn btn-ghost">⚙️ Edit Profile</a>
+      </div>
+
+      <!-- STATUS BANNER -->
+      <div id="status-banner" class="hidden mb-6"></div>
+
+      <!-- STATS ROW -->
+      <div class="stats-row mb-8" id="stats-row">
+        <div class="stat-box skeleton-box"></div>
+        <div class="stat-box skeleton-box"></div>
+        <div class="stat-box skeleton-box"></div>
+        <div class="stat-box skeleton-box"></div>
+      </div>
+
+      <!-- MAIN GRID -->
+      <div class="dash-grid">
+        <!-- PROFILE CARD -->
+        <div class="card dash-profile-card" id="profile-card">
+          <div class="dpc-loading">
+            <div class="skeleton-line" style="width:60%;height:1.2rem;margin-bottom:8px;"></div>
+            <div class="skeleton-line" style="width:40%;height:.9rem;"></div>
+          </div>
+        </div>
+
+        <!-- PAYMENTS CARD -->
+        <div class="card dash-payments-card" id="payments-card">
+          <div class="card-head">
+            <h3>💳 Payment History</h3>
+            <a href="./payments.html" class="btn btn-ghost btn-sm">View All</a>
+          </div>
+          <div id="payments-list">
+            <div class="pay-skeleton"></div>
+            <div class="pay-skeleton"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- QUICK ACTIONS -->
+      <div class="quick-actions mt-8" id="quick-actions">
+        <h3 class="mb-4">Quick Actions</h3>
+        <div class="qa-grid">
+          <a href="./competitions.html" class="qa-card">
+            <span class="qa-icon">🏆</span>
+            <div>
+              <div class="qa-title">Browse Competitions</div>
+              <div class="qa-sub text-sm text-muted">Explore all available competitions</div>
+            </div>
+            <span class="qa-arrow">→</span>
+          </a>
+          <a href="./payments.html" class="qa-card">
+            <span class="qa-icon">💳</span>
+            <div>
+              <div class="qa-title">My Payments</div>
+              <div class="qa-sub text-sm text-muted">View and manage payment history</div>
+            </div>
+            <span class="qa-arrow">→</span>
+          </a>
+          <a href="./profile.html" class="qa-card">
+            <span class="qa-icon">👤</span>
+            <div>
+              <div class="qa-title">Edit Profile</div>
+              <div class="qa-sub text-sm text-muted">Update your personal information</div>
+            </div>
+            <span class="qa-arrow">→</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="footer-mount"></div>
+  <div id="toast-container" class="toast-container"></div>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/components.js"></script>
+  <script>
+    if (!requireAuth()) throw new Error('Not authenticated');
+    mountLayout({ page: 'dashboard' });
+
+    async function loadDashboard() {
+      try {
+        const [meData, payData] = await Promise.allSettled([
+          AuthService.getMe(),
+          PaymentService.getMyPayments()
+        ]);
+
+        // ---- USER DATA ----
+        if (meData.status === 'fulfilled') {
+          const user = meData.value.user;
+          AuthService.saveSession(user);
+
+          // Greeting
+          const hour = new Date().getHours();
+          const greet = hour < 12 ? '☀️ Good morning' : hour < 17 ? '👋 Good afternoon' : '🌙 Good evening';
+          document.getElementById('greeting-text').textContent = `${greet}, ${user.full_name?.split(' ')[0] || user.username}!`;
+
+          // Status banner
+          if (!user.is_active) {
+            const banner = document.getElementById('status-banner');
+            banner.innerHTML = `
+              <div class="status-banner warning">
+                <span>⚠️</span>
+                <div>
+                  <strong>Account not yet active.</strong>
+                  Your account is pending payment. Complete payment to unlock full access.
+                </div>
+                <a href="./payments.html" class="btn btn-secondary btn-sm">Complete Payment</a>
+              </div>
+            `;
+            banner.classList.remove('hidden');
+          }
+
+          // Stats
+          const payments = payData.status === 'fulfilled' ? (payData.value.payments || []) : [];
+          const successPayments = payments.filter(p => p.status === 'success').length;
+          const pendingPayments = payments.filter(p => p.status === 'pending').length;
+
+          document.getElementById('stats-row').innerHTML = `
+            <div class="stat-box">
+              <div class="stat-icon">🏅</div>
+              <div class="stat-val">${user.is_active ? 'Active' : 'Inactive'}</div>
+              <div class="stat-lbl">Account Status</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-icon">✅</div>
+              <div class="stat-val">${successPayments}</div>
+              <div class="stat-lbl">Paid Competitions</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-icon">⏳</div>
+              <div class="stat-val">${pendingPayments}</div>
+              <div class="stat-lbl">Pending Payments</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-icon">🤝</div>
+              <div class="stat-val">${user.users_referred ?? 0}</div>
+              <div class="stat-lbl">Referrals</div>
+            </div>
+          `;
+
+          // Profile card
+          document.getElementById('profile-card').innerHTML = `
+            <div class="dpc-header">
+              <div class="dpc-avatar">${(user.username || 'U').charAt(0).toUpperCase()}</div>
+              <div>
+                <div class="dpc-name">${user.full_name || user.username}</div>
+                <div class="dpc-username text-muted text-sm">@${user.username}</div>
+                <span class="badge ${user.is_active ? 'badge-success' : 'badge-warning'} mt-2">
+                  ${user.is_active ? '✅ Active' : '⏳ Pending Activation'}
+                </span>
+              </div>
+            </div>
+            <div class="dpc-details">
+              ${user.email ? `<div class="dpc-row"><span class="dpc-key">Email</span><span class="dpc-val">${user.email}</span></div>` : ''}
+              ${user.school_name ? `<div class="dpc-row"><span class="dpc-key">School</span><span class="dpc-val">${user.school_name}</span></div>` : ''}
+              ${user.phone ? `<div class="dpc-row"><span class="dpc-key">Phone</span><span class="dpc-val">${user.phone}</span></div>` : ''}
+              <div class="dpc-row"><span class="dpc-key">Joined</span><span class="dpc-val">${new Date(user.created_at).toLocaleDateString('en-NG', { year:'numeric', month:'short', day:'numeric' })}</span></div>
+            </div>
+            <a href="./profile.html" class="btn btn-outline btn-sm mt-4 btn-block">Edit Profile</a>
+          `;
+        }
+
+        // ---- PAYMENTS ----
+        if (payData.status === 'fulfilled') {
+          const payments = payData.value.payments || [];
+          const recentPayments = payments.slice(0, 4);
+
+          if (!recentPayments.length) {
+            document.getElementById('payments-list').innerHTML = `
+              <div class="empty-state" style="padding:32px 16px;">
+                <div class="empty-icon">💳</div>
+                <h3>No payments yet</h3>
+                <p>Your payment history will appear here.</p>
+              </div>`;
+          } else {
+            document.getElementById('payments-list').innerHTML = recentPayments.map(p => `
+              <div class="pay-row">
+                <div class="pay-icon">${p.status === 'success' ? '✅' : '⏳'}</div>
+                <div class="pay-info">
+                  <div class="pay-title">${p.competition_title || 'Competition'}</div>
+                  <div class="pay-date text-xs text-muted">${p.paid_at ? new Date(p.paid_at).toLocaleDateString('en-NG', { month:'short', day:'numeric', year:'numeric' }) : 'Not yet paid'}</div>
+                </div>
+                <div class="pay-right">
+                  <div class="pay-amount">${p.amount}</div>
+                  <span class="badge ${p.status === 'success' ? 'badge-success' : 'badge-warning'}">${p.status === 'success' ? 'Paid' : 'Pending'}</span>
+                </div>
+              </div>
+            `).join('');
+          }
+        } else {
+          document.getElementById('payments-list').innerHTML = `
+            <div class="text-sm text-muted" style="padding:16px;">Could not load payments.</div>`;
+        }
+
+      } catch (err) {
+        Toast.error('Error', 'Failed to load dashboard data.');
+      }
+    }
+
+    loadDashboard();
+  </script>
+</body>
+</html>

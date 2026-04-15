@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Log In — ETI</title>
+  <link rel="stylesheet" href="../css/global.css" />
+  <link rel="stylesheet" href="../css/auth.css" />
+</head>
+<body>
+  <div id="navbar-mount"></div>
+
+  <main class="auth-page page-wrapper">
+    <div class="auth-layout">
+      <!-- LEFT PANEL -->
+      <div class="auth-panel-left" aria-hidden="true">
+        <div class="auth-panel-content">
+          <div class="auth-brand">
+            <div class="logo-badge" style="width:48px;height:48px;font-size:1.2rem;font-family:'Poppins',sans-serif;font-weight:800;background:rgba(255,255,255,0.2);color:#fff;border-radius:12px;display:grid;place-items:center;position:relative;">
+              ET
+            </div>
+            <span style="font-family:'Poppins',sans-serif;font-weight:800;font-size:1.4rem;color:#fff;">ETI</span>
+          </div>
+          <h2 class="auth-panel-title">Welcome back,<br/>champion 👋</h2>
+          <p class="auth-panel-sub">Log into your ETI account and continue your competition journey.</p>
+          <div class="auth-panel-features">
+            <div class="apf-item">✅ Track your registration status</div>
+            <div class="apf-item">✅ View payment history</div>
+            <div class="apf-item">✅ Manage your profile</div>
+          </div>
+          <div class="auth-circuit" aria-hidden="true">
+            <svg viewBox="0 0 300 250" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M30 120 H90 L120 80 H180 L210 120 H270" stroke="white" stroke-width="1.5" stroke-dasharray="6 3" opacity="0.25"/>
+              <circle cx="90" cy="120" r="4" fill="white" opacity="0.3"/>
+              <circle cx="180" cy="80" r="4" fill="white" opacity="0.3"/>
+              <circle cx="270" cy="120" r="4" fill="white" opacity="0.3"/>
+              <path d="M120 80 V30 H170" stroke="white" stroke-width="1.5" stroke-dasharray="6 3" opacity="0.25"/>
+              <path d="M210 120 V180 H260 V210" stroke="white" stroke-width="1.5" stroke-dasharray="6 3" opacity="0.25"/>
+              <rect x="150" y="14" width="40" height="20" rx="4" stroke="white" stroke-width="1.5" opacity="0.3"/>
+              <rect x="240" y="196" width="40" height="20" rx="4" stroke="white" stroke-width="1.5" opacity="0.3"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT PANEL (Form) -->
+      <div class="auth-panel-right">
+        <div class="auth-form-wrap">
+          <div class="auth-form-header">
+            <h1 class="auth-title">Sign In</h1>
+            <p class="text-muted text-sm">Don't have an account? <a href="./register.html" class="text-primary font-semibold">Register here</a></p>
+          </div>
+
+          <form id="login-form" novalidate autocomplete="on">
+            <div class="form-group">
+              <label class="form-label" for="email">Email Address</label>
+              <div class="input-wrapper">
+                <span class="input-icon">✉️</span>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  class="form-input"
+                  placeholder="you@example.com"
+                  autocomplete="email"
+                  required
+                />
+              </div>
+              <span class="form-error" id="email-error"></span>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="password">Password</label>
+              <div class="input-wrapper">
+                <span class="input-icon">🔒</span>
+                <input
+                  type="password"
+                  id="password"
+                  name="password"
+                  class="form-input"
+                  placeholder="••••••••"
+                  autocomplete="current-password"
+                  required
+                />
+                <button type="button" class="input-action" id="toggle-password" aria-label="Show password">👁</button>
+              </div>
+              <span class="form-error" id="password-error"></span>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block btn-lg mt-2" id="login-btn">
+              Sign In
+            </button>
+          </form>
+
+          <div class="divider-text mt-6">
+            <span>or</span>
+          </div>
+
+          <div class="mt-4 text-center">
+            <p class="text-sm text-muted">New to ETI? Pick a competition and create your account.</p>
+            <a href="./register.html" class="btn btn-ghost btn-block mt-2">Create an Account</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="toast-container" class="toast-container"></div>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/components.js"></script>
+  <script>
+    mountLayout({ page: 'login' });
+
+    const form = document.getElementById('login-form');
+    const loginBtn = document.getElementById('login-btn');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const togglePw = document.getElementById('toggle-password');
+
+    // Toggle password visibility
+    togglePw.addEventListener('click', () => {
+      const isText = passwordInput.type === 'text';
+      passwordInput.type = isText ? 'password' : 'text';
+      togglePw.textContent = isText ? '👁' : '🙈';
+    });
+
+    // Clear errors on input
+    emailInput.addEventListener('input', () => validateField(emailInput, [Validators.required, Validators.email]));
+    passwordInput.addEventListener('input', () => validateField(passwordInput, [Validators.required]));
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const emailValid = validateField(emailInput, [Validators.required, Validators.email]);
+      const pwValid = validateField(passwordInput, [Validators.required]);
+      if (!emailValid || !pwValid) return;
+
+      setButtonLoading(loginBtn, true);
+
+      try {
+        const data = await AuthService.login(emailInput.value.trim(), passwordInput.value);
+        AuthService.saveSession(data.user);
+        Toast.success('Welcome back!', `Signed in as ${data.user?.username || data.user?.email}`);
+        setTimeout(() => { window.location.href = './dashboard.html'; }, 900);
+      } catch (err) {
+        setButtonLoading(loginBtn, false);
+        Toast.error('Sign in failed', err.message || 'Invalid email or password.');
+        if (err.status === 401 || err.status === 400) {
+          passwordInput.value = '';
+          passwordInput.focus();
+        }
+      }
+    });
+  </script>
+</body>
+</html>

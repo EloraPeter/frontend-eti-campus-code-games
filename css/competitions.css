@@ -1,0 +1,138 @@
+/* =============================================
+   COMPETITIONS PAGE STYLES
+============================================= */
+
+.comp-hero {
+  background: linear-gradient(145deg, var(--bg-soft) 0%, var(--bg) 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 56px 0 48px;
+  margin-bottom: 48px;
+  position: relative;
+  overflow: hidden;
+}
+
+.comp-hero::before {
+  content: '';
+  position: absolute;
+  top: -60px; right: -60px;
+  width: 280px; height: 280px;
+  background: radial-gradient(circle, rgba(65,105,225,0.07) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+/* ---- GRID ---- */
+.comp-full-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 24px;
+  margin-bottom: 100px;
+}
+
+.comp-full-card {
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+}
+
+.cfc-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.cfc-icon {
+  width: 52px; height: 52px;
+  background: rgba(65,105,225,0.08);
+  border-radius: var(--radius-md);
+  display: grid;
+  place-items: center;
+  font-size: 1.6rem;
+}
+
+.cfc-title {
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+}
+
+.cfc-desc {
+  flex: 1;
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.cfc-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  margin-top: auto;
+}
+
+.cfc-price { display: flex; flex-direction: column; gap: 2px; }
+.price-label { font-size: 0.72rem; color: var(--text-light); font-family: 'Montserrat', sans-serif; font-weight: 500; text-transform: uppercase; letter-spacing: .04em; }
+.price-val { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 1rem; }
+
+/* ---- SKELETON ---- */
+.skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 24px;
+  margin-bottom: 48px;
+}
+
+.skeleton-card {
+  height: 260px;
+  background: linear-gradient(90deg, var(--bg-soft) 25%, var(--border) 50%, var(--bg-soft) 75%);
+  background-size: 200% 100%;
+  border-radius: var(--radius-lg);
+  animation: shimmer 1.5s infinite;
+  border: 1.5px solid var(--border);
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ---- FLOATING REGISTER BAR ---- */
+.register-bar {
+  position: fixed;
+  bottom: 24px;
+  left: 50%; transform: translateX(-50%);
+  z-index: 800;
+  animation: slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateX(-50%) translateY(24px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+.rb-inner {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: var(--bg-card);
+  border: 1.5px solid var(--primary);
+  border-radius: var(--radius-full);
+  padding: 12px 20px 12px 24px;
+  box-shadow: var(--shadow-lg), 0 0 0 4px rgba(65,105,225,0.1);
+  white-space: nowrap;
+}
+
+.rb-info { display: flex; align-items: center; gap: 8px; }
+.rb-label { font-size: 0.8rem; color: var(--text-muted); font-family: 'Montserrat', sans-serif; font-weight: 500; }
+.rb-title { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 0.95rem; color: var(--text); max-width: 200px; overflow: hidden; text-overflow: ellipsis; }
+
+@media (max-width: 600px) {
+  .rb-inner { flex-direction: column; border-radius: var(--radius-lg); padding: 16px 20px; }
+  .register-bar { bottom: 16px; left: 16px; right: 16px; transform: none; }
+  .rb-title { max-width: 100%; }
+  .comp-full-grid { margin-bottom: 140px; }
+}

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Competitions — ETI</title>
+  <link rel="stylesheet" href="../css/global.css" />
+  <link rel="stylesheet" href="../css/competitions.css" />
+</head>
+<body>
+  <div id="navbar-mount"></div>
+
+  <main class="page-wrapper">
+    <!-- HERO BANNER -->
+    <section class="comp-hero">
+      <div class="container">
+        <div class="section-eyebrow" style="justify-content:center;margin-bottom:12px;">All Competitions</div>
+        <h1 style="text-align:center;">Choose Your Arena</h1>
+        <p class="text-muted text-center mt-3" style="max-width:500px;margin-left:auto;margin-right:auto;">Select a competition, register, and let your talent speak. One selection per registration.</p>
+      </div>
+    </section>
+
+    <div class="container" style="padding-bottom:80px;">
+
+      <!-- LOADING -->
+      <div id="comp-loading" class="skeleton-grid">
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+      </div>
+
+      <!-- ERROR -->
+      <div id="comp-error" class="hidden">
+        <div class="empty-state card">
+          <div class="empty-icon">😕</div>
+          <h3>Couldn't load competitions</h3>
+          <p>There was an error fetching competitions.</p>
+          <button class="btn btn-outline mt-4" id="retry-btn">🔄 Retry</button>
+        </div>
+      </div>
+
+      <!-- GRID -->
+      <div id="comp-grid" class="comp-full-grid hidden"></div>
+
+      <!-- FLOATING REGISTER BAR -->
+      <div class="register-bar hidden" id="register-bar">
+        <div class="rb-inner">
+          <div class="rb-info">
+            <span class="rb-label">Selected:</span>
+            <span class="rb-title" id="rb-title">—</span>
+          </div>
+          <a href="./register.html" class="btn btn-primary">Register for this competition →</a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="footer-mount"></div>
+  <div id="toast-container" class="toast-container"></div>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/components.js"></script>
+  <script>
+    mountLayout({ page: 'competitions' });
+
+    let selectedId = null;
+
+    async function loadCompetitions() {
+      const loadEl = document.getElementById('comp-loading');
+      const errEl = document.getElementById('comp-error');
+      const gridEl = document.getElementById('comp-grid');
+
+      try {
+        const data = await CompetitionService.list();
+        const comps = data.competitions || [];
+
+        loadEl.classList.add('hidden');
+
+        if (!comps.length) {
+          gridEl.innerHTML = `
+            <div class="empty-state" style="grid-column:1/-1;">
+              <div class="empty-icon">🏁</div>
+              <h3>No competitions available</h3>
+              <p>Check back soon — new competitions are on the way!</p>
+            </div>`;
+          gridEl.classList.remove('hidden');
+          return;
+        }
+
+        const ICONS = ['💻', '🤖', '🎨', '🧠', '⚡', '🔬', '🌐', '🎯'];
+        gridEl.innerHTML = comps.map((c, i) => `
+          <div class="comp-full-card card card-hover" data-id="${c.id}" data-title="${c.title}">
+            <div class="cfc-top">
+              <div class="cfc-icon">${ICONS[i % ICONS.length]}</div>
+              <span class="badge badge-primary">Open</span>
+            </div>
+            <h3 class="cfc-title">${c.title}</h3>
+            <p class="cfc-desc text-muted text-sm">${c.description || 'Compete and showcase your skills in this exciting challenge.'}</p>
+            <div class="cfc-footer">
+              <div class="cfc-price">
+                <span class="price-label">Entry Fee</span>
+                <span class="price-val">${c.price || 'Free'}</span>
+              </div>
+              <button class="btn btn-outline btn-sm select-comp-btn" data-id="${c.id}" data-title="${c.title}">
+                Select
+              </button>
+            </div>
+          </div>
+        `).join('');
+
+        gridEl.classList.remove('hidden');
+
+        gridEl.querySelectorAll('.select-comp-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const id = btn.dataset.id;
+            const title = btn.dataset.title;
+
+            // Update UI
+            gridEl.querySelectorAll('.comp-full-card').forEach(c => c.classList.remove('card-selected'));
+            gridEl.querySelectorAll('.select-comp-btn').forEach(b => { b.textContent = 'Select'; b.classList.remove('btn-primary'); b.classList.add('btn-outline'); });
+
+            const parentCard = btn.closest('.comp-full-card');
+            parentCard.classList.add('card-selected');
+            btn.textContent = '✓ Selected';
+            btn.classList.add('btn-primary');
+            btn.classList.remove('btn-outline');
+
+            selectedId = id;
+            CompetitionService.setSelected(id);
+            Store.set('selected_competition_title', title);
+
+            document.getElementById('rb-title').textContent = title;
+            document.getElementById('register-bar').classList.remove('hidden');
+          });
+        });
+
+        // Also select card on click
+        gridEl.querySelectorAll('.comp-full-card').forEach(card => {
+          card.addEventListener('click', () => {
+            card.querySelector('.select-comp-btn').click();
+          });
+        });
+
+      } catch (err) {
+        loadEl.classList.add('hidden');
+        errEl.classList.remove('hidden');
+        Toast.error('Error', err.message || 'Could not load competitions.');
+      }
+    }
+
+    document.getElementById('retry-btn')?.addEventListener('click', loadCompetitions);
+    loadCompetitions();
+  </script>
+</body>
+</html>

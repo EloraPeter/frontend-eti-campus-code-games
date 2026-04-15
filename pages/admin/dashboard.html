@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard — ETI</title>
+  <link rel="stylesheet" href="../../css/global.css" />
+  <link rel="stylesheet" href="../../css/admin/admin.global.css" />
+  <link rel="stylesheet" href="../../css/admin/admin.dashboard.css" />
+</head>
+<body>
+  <div id="navbar-mount"></div>
+
+  <div class="page-wrapper">
+    <div class="admin-page">
+
+      <!-- SIDEBAR -->
+      <aside class="admin-sidebar">
+        <div class="sidebar-section-label">Overview</div>
+        <a href="./dashboard.html" class="sidebar-link active"><span class="sl-icon">📊</span> Dashboard</a>
+
+        <div class="sidebar-section-label">Management</div>
+        <a href="./users.html" class="sidebar-link"><span class="sl-icon">👥</span> Users <span class="sidebar-badge" id="sb-users">—</span></a>
+        <a href="./competitions.html" class="sidebar-link"><span class="sl-icon">🏆</span> Competitions</a>
+        <a href="./payments.html" class="sidebar-link"><span class="sl-icon">💳</span> Payments</a>
+
+        <div class="sidebar-section-label">System</div>
+        <a href="/pages/index.html" class="sidebar-link"><span class="sl-icon">🌐</span> Public Site</a>
+      </aside>
+
+      <!-- MAIN -->
+      <main class="admin-main">
+        <div class="admin-page-header">
+          <div>
+            <h1>Dashboard</h1>
+            <div class="admin-breadcrumb">ETI Admin · Overview</div>
+          </div>
+          <div class="flex gap-3 items-center">
+            <span id="last-updated" class="text-xs text-light"></span>
+            <button class="btn btn-ghost btn-sm" id="refresh-btn">🔄 Refresh</button>
+          </div>
+        </div>
+
+        <!-- STATS -->
+        <div class="admin-stats-grid" id="stats-grid">
+          <div class="admin-stat-card asc-blue skeleton-asc"></div>
+          <div class="admin-stat-card asc-green skeleton-asc"></div>
+          <div class="admin-stat-card asc-yellow skeleton-asc"></div>
+          <div class="admin-stat-card asc-red skeleton-asc"></div>
+        </div>
+
+        <!-- TWO COLUMN GRID -->
+        <div class="dash-two-col">
+
+          <!-- RECENT TRANSACTIONS -->
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <div class="admin-card-title">💳 Recent Transactions</div>
+              <div class="admin-card-actions">
+                <select class="filter-select" id="days-filter" style="font-size:.8rem;">
+                  <option value="7">Last 7 days</option>
+                  <option value="14">Last 14 days</option>
+                  <option value="30">Last 30 days</option>
+                </select>
+                <a href="./payments.html" class="btn btn-ghost btn-sm">View All</a>
+              </div>
+            </div>
+            <div id="recent-transactions">
+              <div style="padding:24px;text-align:center;">
+                <span class="spinner spinner-dark" style="display:inline-block;"></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- RECENT USERS -->
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <div class="admin-card-title">👥 Recent Users</div>
+              <a href="./users.html" class="btn btn-ghost btn-sm">Manage All</a>
+            </div>
+            <div id="recent-users">
+              <div style="padding:24px;text-align:center;">
+                <span class="spinner spinner-dark" style="display:inline-block;"></span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- PENDING ACTIVATIONS ALERT -->
+        <div id="pending-alert" class="hidden mt-6"></div>
+
+      </main>
+    </div>
+  </div>
+
+  <div id="footer-mount"></div>
+  <div id="toast-container" class="toast-container"></div>
+
+  <script src="../../js/api.js"></script>
+  <script src="../../js/components.js"></script>
+  <script src="../../js/admin.api.js"></script>
+  <script>
+    if (!requireAdmin()) throw new Error('Admin access required');
+    mountAdminLayout('dashboard');
+
+    async function loadDashboard(days = 7) {
+      try {
+        const [usersRes, txRes, recentRes] = await Promise.allSettled([
+          AdminUserService.getAll(),
+          AdminPaymentService.getAll(),
+          AdminPaymentService.getRecent(days)
+        ]);
+
+        // ---- STATS ----
+        const users = usersRes.status === 'fulfilled' ? (usersRes.value.users || []) : [];
+        const txs = txRes.status === 'fulfilled' ? (txRes.value.transactions || []) : [];
+
+        const totalUsers = users.length;
+        const activeUsers = users.filter(u => u.is_active).length;
+        const paidTxs = txs.filter(t => t.status === 'success');
+        const pendingTxs = txs.filter(t => t.status === 'pending');
+
+        // sidebar badge
+        const sbUsers = document.getElementById('sb-users');
+        if (sbUsers) sbUsers.textContent = totalUsers;
+
+        document.getElementById('stats-grid').innerHTML = `
+          <div class="admin-stat-card asc-blue">
+            <div class="asc-top">
+              <div class="asc-icon">👥</div>
+              <span class="asc-trend trend-up">+${users.filter(u => {
+                const d = new Date(u.created_at);
+                return (Date.now() - d) < 7 * 86400000;
+              }).length} this week</span>
+            </div>
+            <div class="asc-val">${totalUsers}</div>
+            <div class="asc-lbl">Total Users</div>
+          </div>
+          <div class="admin-stat-card asc-green">
+            <div class="asc-top">
+              <div class="asc-icon">✅</div>
+            </div>
+            <div class="asc-val">${activeUsers}</div>
+            <div class="asc-lbl">Active Users</div>
+          </div>
+          <div class="admin-stat-card asc-yellow">
+            <div class="asc-top">
+              <div class="asc-icon">💰</div>
+            </div>
+            <div class="asc-val">${paidTxs.length}</div>
+            <div class="asc-lbl">Paid Transactions</div>
+          </div>
+          <div class="admin-stat-card asc-red">
+            <div class="asc-top">
+              <div class="asc-icon">⏳</div>
+            </div>
+            <div class="asc-val">${pendingTxs.length}</div>
+            <div class="asc-lbl">Pending Payments</div>
+          </div>
+        `;
+
+        // ---- RECENT TRANSACTIONS ----
+        const recent = recentRes.status === 'fulfilled' ? (recentRes.value.recent_transactions || []) : [];
+        if (!recent.length) {
+          document.getElementById('recent-transactions').innerHTML = `
+            <div class="empty-state" style="padding:32px;">
+              <div class="empty-icon">💳</div>
+              <h3>No transactions in this period</h3>
+            </div>`;
+        } else {
+          document.getElementById('recent-transactions').innerHTML = `
+            <div class="data-table-wrap">
+              <table class="data-table">
+                <thead><tr>
+                  <th>User / Competition</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                  <th>Date</th>
+                </tr></thead>
+                <tbody>
+                  ${recent.slice(0, 8).map(t => `
+                    <tr>
+                      <td>
+                        <div class="td-primary">${t.competition_title || 'Competition'}</div>
+                        <div class="td-sub td-mono">${t.payment_reference || '—'}</div>
+                      </td>
+                      <td><strong>${t.amount}</strong></td>
+                      <td><span class="badge ${t.status === 'success' ? 'badge-success' : 'badge-warning'}">${t.status === 'success' ? '✅ Paid' : '⏳ Pending'}</span></td>
+                      <td class="text-xs text-muted">${t.paid_at ? new Date(t.paid_at).toLocaleDateString('en-NG', { month:'short', day:'numeric' }) : '—'}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          `;
+        }
+
+        // ---- RECENT USERS ----
+        const recentUsers = [...users].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 7);
+        if (!recentUsers.length) {
+          document.getElementById('recent-users').innerHTML = `<div class="empty-state" style="padding:32px;"><div class="empty-icon">👥</div><h3>No users yet</h3></div>`;
+        } else {
+          document.getElementById('recent-users').innerHTML = `
+            <div class="data-table-wrap">
+              <table class="data-table">
+                <thead><tr>
+                  <th>User</th>
+                  <th>Status</th>
+                  <th>Joined</th>
+                </tr></thead>
+                <tbody>
+                  ${recentUsers.map(u => `
+                    <tr>
+                      <td>
+                        <div class="user-cell">
+                          <div class="user-avatar-sm">${(u.username || 'U').charAt(0).toUpperCase()}</div>
+                          <div>
+                            <div class="td-primary">${u.username}</div>
+                            <div class="td-sub">${u.email}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <span class="badge ${u.is_active ? 'badge-success' : 'badge-warning'}">
+                          ${u.is_active ? 'Active' : 'Pending'}
+                        </span>
+                        ${u.is_admin ? '<span class="badge badge-primary" style="margin-left:4px;">Admin</span>' : ''}
+                      </td>
+                      <td class="text-xs text-muted">${new Date(u.created_at).toLocaleDateString('en-NG', { month:'short', day:'numeric', year:'numeric' })}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          `;
+        }
+
+        // ---- PENDING ALERT ----
+        const pendingUsers = users.filter(u => !u.is_active).length;
+        if (pendingUsers > 0) {
+          document.getElementById('pending-alert').innerHTML = `
+            <div class="status-banner warning" style="border-radius:var(--radius-md);padding:16px 20px;">
+              <span>⚠️</span>
+              <div><strong>${pendingUsers} user${pendingUsers > 1 ? 's' : ''}</strong> are pending activation (payment not yet completed).</div>
+              <a href="./users.html?filter=inactive" class="btn btn-secondary btn-sm">Review Users</a>
+            </div>`;
+          document.getElementById('pending-alert').classList.remove('hidden');
+        }
+
+        document.getElementById('last-updated').textContent = `Updated ${new Date().toLocaleTimeString('en-NG', { hour:'2-digit', minute:'2-digit' })}`;
+
+      } catch (err) {
+        Toast.error('Dashboard error', err.message || 'Failed to load data.');
+      }
+    }
+
+    // Days filter
+    document.getElementById('days-filter').addEventListener('change', (e) => {
+      loadDashboard(parseInt(e.target.value));
+    });
+
+    document.getElementById('refresh-btn').addEventListener('click', () => loadDashboard());
+
+    loadDashboard();
+  </script>
+</body>
+</html>

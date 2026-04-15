@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Payments — ETI Admin</title>
+  <link rel="stylesheet" href="../../css/global.css" />
+  <link rel="stylesheet" href="../../css/admin/admin.global.css" />
+</head>
+<body>
+  <div id="navbar-mount"></div>
+
+  <div class="page-wrapper">
+    <div class="admin-page">
+
+      <aside class="admin-sidebar">
+        <div class="sidebar-section-label">Overview</div>
+        <a href="./dashboard.html" class="sidebar-link"><span class="sl-icon">📊</span> Dashboard</a>
+        <div class="sidebar-section-label">Management</div>
+        <a href="./users.html" class="sidebar-link"><span class="sl-icon">👥</span> Users</a>
+        <a href="./competitions.html" class="sidebar-link"><span class="sl-icon">🏆</span> Competitions</a>
+        <a href="./payments.html" class="sidebar-link active"><span class="sl-icon">💳</span> Payments</a>
+        <div class="sidebar-section-label">System</div>
+        <a href="/pages/index.html" class="sidebar-link"><span class="sl-icon">🌐</span> Public Site</a>
+      </aside>
+
+      <main class="admin-main">
+        <div class="admin-page-header">
+          <div>
+            <h1>Payments</h1>
+            <div class="admin-breadcrumb"><a href="./dashboard.html">Dashboard</a> · Payments</div>
+          </div>
+          <div class="flex gap-3 items-center">
+            <div class="pay-mode-tabs" id="pay-mode-tabs">
+              <button class="pmt-tab active" data-mode="all">All Time</button>
+              <button class="pmt-tab" data-mode="recent">Recent</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- SUMMARY STATS -->
+        <div class="admin-stats-grid" id="pay-stats" style="grid-template-columns:repeat(3,1fr);">
+          <div class="admin-stat-card asc-blue skeleton-asc" style="height:100px;"></div>
+          <div class="admin-stat-card asc-green skeleton-asc" style="height:100px;"></div>
+          <div class="admin-stat-card asc-yellow skeleton-asc" style="height:100px;"></div>
+        </div>
+
+        <!-- MAIN TABLE -->
+        <div class="admin-card mt-6">
+          <div class="admin-card-header">
+            <div class="admin-card-title" id="table-title">💳 All Transactions</div>
+            <div class="admin-card-actions" id="recent-controls" style="display:none;">
+              <label class="text-xs text-muted" style="font-family:'Montserrat',sans-serif;font-weight:600;">Days:</label>
+              <select class="filter-select" id="days-select">
+                <option value="7">Last 7 days</option>
+                <option value="14">Last 14 days</option>
+                <option value="30">Last 30 days</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- TOOLBAR -->
+          <div class="table-toolbar">
+            <div class="search-box">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="pay-search" placeholder="Search by reference or competition…" />
+            </div>
+            <select class="filter-select" id="pay-status-filter">
+              <option value="all">All Status</option>
+              <option value="success">✅ Paid</option>
+              <option value="pending">⏳ Pending</option>
+            </select>
+            <button class="btn btn-ghost btn-sm" id="refresh-pay-btn" style="margin-left:auto;">🔄 Refresh</button>
+          </div>
+
+          <!-- TABLE -->
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Reference</th>
+                  <th>Competition</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                  <th>Payment Date</th>
+                  <th>Created</th>
+                </tr>
+              </thead>
+              <tbody id="pay-tbody">
+                <tr class="table-loading-row">
+                  <td colspan="6">
+                    <div class="table-spinner">
+                      <span class="spinner spinner-dark"></span> Loading transactions…
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="pagination-wrap" id="pay-pagination"></div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div id="footer-mount"></div>
+  <div id="toast-container" class="toast-container"></div>
+
+  <style>
+    .pay-mode-tabs {
+      display: flex;
+      background: var(--bg-soft);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-full);
+      padding: 3px;
+    }
+    .pmt-tab {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 600;
+      font-size: .82rem;
+      padding: 6px 16px;
+      border-radius: var(--radius-full);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all var(--transition);
+      border: none;
+      background: none;
+    }
+    .pmt-tab.active { background: var(--bg-card); color: var(--primary); box-shadow: var(--shadow-sm); }
+    .skeleton-asc {
+      animation: shimmer 1.5s infinite;
+      background: linear-gradient(90deg, var(--bg-soft) 25%, var(--border) 50%, var(--bg-soft) 75%);
+      background-size: 200% 100%;
+    }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+  </style>
+
+  <script src="../../js/api.js"></script>
+  <script src="../../js/components.js"></script>
+  <script src="../../js/admin.api.js"></script>
+  <script>
+    if (!requireAdmin()) throw new Error('Admin access required');
+    mountAdminLayout('payments');
+
+    let allTransactions = [];
+    let filteredTransactions = [];
+    let currentPage = 1;
+    let currentMode = 'all';
+    const PER_PAGE = 20;
+
+    async function loadAll() {
+      setTableLoading();
+      try {
+        const data = await AdminPaymentService.getAll();
+        allTransactions = data.transactions || [];
+        renderStats(allTransactions);
+        applyFilters();
+      } catch (err) {
+        setTableError();
+        Toast.error('Error', err.message || 'Could not load transactions.');
+      }
+    }
+
+    async function loadRecent(days = 7) {
+      setTableLoading();
+      try {
+        const data = await AdminPaymentService.getRecent(days);
+        allTransactions = data.recent_transactions || [];
+        renderStats(allTransactions);
+        applyFilters();
+      } catch (err) {
+        setTableError();
+        Toast.error('Error', err.message || 'Could not load recent transactions.');
+      }
+    }
+
+    function setTableLoading() {
+      document.getElementById('pay-tbody').innerHTML = `
+        <tr class="table-loading-row">
+          <td colspan="6"><div class="table-spinner"><span class="spinner spinner-dark"></span> Loading…</div></td>
+        </tr>`;
+    }
+
+    function setTableError() {
+      document.getElementById('pay-tbody').innerHTML = `
+        <tr class="table-empty-row">
+          <td colspan="6">😕 Failed to load transactions.</td>
+        </tr>`;
+    }
+
+    function renderStats(txs) {
+      const paid = txs.filter(t => t.status === 'success');
+      const pending = txs.filter(t => t.status === 'pending');
+
+      document.getElementById('pay-stats').innerHTML = `
+        <div class="admin-stat-card asc-blue">
+          <div class="asc-top"><div class="asc-icon">📋</div></div>
+          <div class="asc-val">${txs.length}</div>
+          <div class="asc-lbl">Total Transactions</div>
+        </div>
+        <div class="admin-stat-card asc-green">
+          <div class="asc-top"><div class="asc-icon">✅</div></div>
+          <div class="asc-val">${paid.length}</div>
+          <div class="asc-lbl">Paid</div>
+        </div>
+        <div class="admin-stat-card asc-yellow">
+          <div class="asc-top"><div class="asc-icon">⏳</div></div>
+          <div class="asc-val">${pending.length}</div>
+          <div class="asc-lbl">Pending</div>
+        </div>
+      `;
+    }
+
+    function applyFilters() {
+      const search = document.getElementById('pay-search').value.toLowerCase().trim();
+      const status = document.getElementById('pay-status-filter').value;
+
+      filteredTransactions = allTransactions.filter(t => {
+        const matchSearch = !search ||
+          t.payment_reference?.toLowerCase().includes(search) ||
+          t.competition_title?.toLowerCase().includes(search);
+        const matchStatus = status === 'all' || t.status === status;
+        return matchSearch && matchStatus;
+      });
+
+      currentPage = 1;
+      renderTable();
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('pay-tbody');
+      const paginationEl = document.getElementById('pay-pagination');
+
+      if (!filteredTransactions.length) {
+        tbody.innerHTML = `<tr class="table-empty-row"><td colspan="6">No transactions match your filters.</td></tr>`;
+        paginationEl.innerHTML = '';
+        return;
+      }
+
+      const { items, ...pagInfo } = paginate(filteredTransactions, currentPage, PER_PAGE);
+
+      tbody.innerHTML = items.map(t => `
+        <tr>
+          <td>
+            <div class="td-mono">${t.payment_reference || '—'}</div>
+          </td>
+          <td>
+            <div class="td-primary">${t.competition_title || 'Competition'}</div>
+          </td>
+          <td>
+            <strong style="font-family:'Poppins',sans-serif;font-weight:700;">${t.amount}</strong>
+          </td>
+          <td>
+            <span class="badge ${t.status === 'success' ? 'badge-success' : 'badge-warning'}">
+              ${t.status === 'success' ? '✅ Paid' : '⏳ Pending'}
+            </span>
+          </td>
+          <td class="text-xs text-muted">
+            ${t.paid_at ? new Date(t.paid_at).toLocaleDateString('en-NG', { day:'numeric', month:'short', year:'numeric' }) : '—'}
+          </td>
+          <td class="text-xs text-muted">
+            ${new Date(t.created_at).toLocaleDateString('en-NG', { day:'numeric', month:'short', year:'numeric' })}
+          </td>
+        </tr>
+      `).join('');
+
+      renderPagination(paginationEl, pagInfo, (p) => { currentPage = p; renderTable(); });
+    }
+
+    // ---- MODE TABS ----
+    document.getElementById('pay-mode-tabs').querySelectorAll('.pmt-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.pmt-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        currentMode = tab.dataset.mode;
+
+        const recentControls = document.getElementById('recent-controls');
+        const tableTitle = document.getElementById('table-title');
+
+        if (currentMode === 'recent') {
+          recentControls.style.display = 'flex';
+          tableTitle.textContent = '📅 Recent Transactions';
+          loadRecent(parseInt(document.getElementById('days-select').value));
+        } else {
+          recentControls.style.display = 'none';
+          tableTitle.textContent = '💳 All Transactions';
+          loadAll();
+        }
+      });
+    });
+
+    document.getElementById('days-select').addEventListener('change', (e) => {
+      if (currentMode === 'recent') loadRecent(parseInt(e.target.value));
+    });
+
+    document.getElementById('pay-search').addEventListener('input', applyFilters);
+    document.getElementById('pay-status-filter').addEventListener('change', applyFilters);
+    document.getElementById('refresh-pay-btn').addEventListener('click', () => {
+      currentMode === 'recent' ? loadRecent(parseInt(document.getElementById('days-select').value)) : loadAll();
+    });
+
+    loadAll();
+  </script>
+</body>
+</html>

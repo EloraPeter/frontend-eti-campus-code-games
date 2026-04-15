@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ETI — Elora Tech Institute</title>
+  <meta name="description" content="Compete, learn, and grow with Elora Tech Institute's exciting tech competitions." />
+  <link rel="stylesheet" href="../css/global.css" />
+  <link rel="stylesheet" href="../css/index.css" />
+</head>
+<body>
+
+  <div id="navbar-mount"></div>
+
+  <main>
+    <!-- HERO -->
+    <section class="hero-section">
+      <div class="hero-bg-deco" aria-hidden="true">
+        <svg class="circuit-svg" viewBox="0 0 600 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M50 200 H150 L200 150 H300 L350 200 H450" stroke="currentColor" stroke-width="1.5" stroke-dasharray="6 3"/>
+          <circle cx="150" cy="200" r="4" fill="currentColor"/>
+          <circle cx="300" cy="150" r="4" fill="currentColor"/>
+          <circle cx="450" cy="200" r="4" fill="currentColor"/>
+          <path d="M200 150 V80 H280" stroke="currentColor" stroke-width="1.5" stroke-dasharray="6 3"/>
+          <circle cx="280" cy="80" r="3" fill="currentColor"/>
+          <path d="M350 200 V280 H420 V320" stroke="currentColor" stroke-width="1.5" stroke-dasharray="6 3"/>
+          <circle cx="420" cy="320" r="3" fill="currentColor"/>
+          <rect x="260" y="60" width="40" height="20" rx="4" stroke="currentColor" stroke-width="1.5"/>
+          <rect x="400" y="300" width="40" height="20" rx="4" stroke="currentColor" stroke-width="1.5"/>
+        </svg>
+      </div>
+
+      <div class="container hero-inner">
+        <div class="hero-content">
+          <div class="hero-badge">
+            <span>🚀</span>
+            <span>Competitions Now Open</span>
+          </div>
+          <h1 class="hero-title">
+            Where <span class="highlight">Talent</span><br/>
+            Meets <span class="highlight-gold">Opportunity</span>
+          </h1>
+          <p class="hero-subtitle">Join thousands of students competing, learning, and building the future through ETI's world-class tech competitions.</p>
+          <div class="hero-actions">
+            <a href="#competitions" class="btn btn-primary btn-lg">
+              🏆 View Competitions
+            </a>
+            <a href="./login.html" class="btn btn-ghost btn-lg">
+              Sign In
+            </a>
+          </div>
+          <div class="hero-stats">
+            <div class="stat-item">
+              <span class="stat-number">500+</span>
+              <span class="stat-label">Students</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <span class="stat-number">12+</span>
+              <span class="stat-label">Competitions</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <span class="stat-number">₦0</span>
+              <span class="stat-label">Entry Barrier</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-visual" aria-hidden="true">
+          <div class="hero-card-stack">
+            <div class="floating-card fc1">
+              <span class="fc-icon">💻</span>
+              <span class="fc-text">Coding Challenge</span>
+            </div>
+            <div class="floating-card fc2">
+              <span class="fc-icon">🤖</span>
+              <span class="fc-text">AI Competition</span>
+            </div>
+            <div class="floating-card fc3">
+              <span class="fc-icon">🎨</span>
+              <span class="fc-text">Design Battle</span>
+            </div>
+            <div class="hero-orb"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section class="section how-section">
+      <div class="container">
+        <div class="section-header text-center">
+          <div class="section-eyebrow" style="justify-content:center;">How It Works</div>
+          <h2>Get started in 3 simple steps</h2>
+          <p class="text-muted mt-3" style="max-width:480px;margin-left:auto;margin-right:auto;">From browsing to competing — our process is designed to be fast, clear, and fair.</p>
+        </div>
+        <div class="steps-grid">
+          <div class="step-card">
+            <div class="step-number">01</div>
+            <div class="step-icon">🏆</div>
+            <h3>Pick a Competition</h3>
+            <p class="text-muted text-sm">Browse all available competitions and choose the one that matches your skills and interest.</p>
+          </div>
+          <div class="step-connector">→</div>
+          <div class="step-card">
+            <div class="step-number">02</div>
+            <div class="step-icon">📝</div>
+            <h3>Register & Pay</h3>
+            <p class="text-muted text-sm">Create your account, fill your details, and complete a quick payment to activate your slot.</p>
+          </div>
+          <div class="step-connector">→</div>
+          <div class="step-card">
+            <div class="step-number">03</div>
+            <div class="step-icon">⚡</div>
+            <h3>Compete & Win</h3>
+            <p class="text-muted text-sm">Show up, give it your best, and walk away with recognition, prizes, and experience.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- COMPETITIONS -->
+    <section class="section" id="competitions" style="background: var(--bg-soft);">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-eyebrow">Open Now</div>
+          <h2>Active Competitions</h2>
+          <p class="text-muted mt-2">Select a competition to register. Each competition is unique — read carefully before choosing.</p>
+        </div>
+
+        <!-- Loading state -->
+        <div id="competitions-loading" class="competitions-loading">
+          <div class="skeleton-grid">
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+          </div>
+        </div>
+
+        <!-- Error state -->
+        <div id="competitions-error" class="hidden">
+          <div class="empty-state">
+            <div class="empty-icon">😕</div>
+            <h3>Couldn't load competitions</h3>
+            <p>There was an error fetching competitions. Please try again.</p>
+            <button class="btn btn-outline mt-4" id="retry-competitions">🔄 Retry</button>
+          </div>
+        </div>
+
+        <!-- Competitions grid -->
+        <div id="competitions-grid" class="competitions-grid hidden"></div>
+
+        <!-- CTA -->
+        <div id="register-cta" class="register-cta hidden">
+          <div class="cta-box">
+            <div>
+              <p class="text-sm text-muted mb-1">Selected:</p>
+              <p class="font-semibold" id="selected-comp-name">—</p>
+            </div>
+            <a href="./register.html" class="btn btn-primary btn-lg" id="proceed-register-btn">
+              Register Now →
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- WHY ETI -->
+    <section class="section why-section">
+      <div class="container">
+        <div class="section-header text-center">
+          <div class="section-eyebrow" style="justify-content:center;">Why ETI</div>
+          <h2>Built for ambitious students</h2>
+        </div>
+        <div class="why-grid">
+          <div class="why-card">
+            <span class="why-icon">🌍</span>
+            <h4>Pan-African Reach</h4>
+            <p class="text-muted text-sm">Compete alongside students from across Africa in a growing, vibrant community.</p>
+          </div>
+          <div class="why-card">
+            <span class="why-icon">🎓</span>
+            <h4>Learn While You Compete</h4>
+            <p class="text-muted text-sm">Every challenge is designed to push your knowledge further than you imagined.</p>
+          </div>
+          <div class="why-card">
+            <span class="why-icon">🏅</span>
+            <h4>Real Recognition</h4>
+            <p class="text-muted text-sm">Winners receive certificates, prizes, and opportunities that matter on your career journey.</p>
+          </div>
+          <div class="why-card">
+            <span class="why-icon">🤝</span>
+            <h4>Fair & Transparent</h4>
+            <p class="text-muted text-sm">Clear rules, open judging, and a process that respects every participant.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BOTTOM CTA BANNER -->
+    <section class="cta-banner-section">
+      <div class="container">
+        <div class="cta-banner">
+          <div class="cta-banner-text">
+            <h2>Ready to show what you're made of?</h2>
+            <p class="text-muted mt-2">Join ETI's next competition and take the first step toward your tech future.</p>
+          </div>
+          <div class="cta-banner-actions">
+            <a href="#competitions" class="btn btn-secondary btn-lg">Browse Competitions</a>
+            <a href="./register.html" class="btn btn-outline btn-lg" style="color:#fff;border-color:rgba(255,255,255,0.4);">Create Account</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="footer-mount"></div>
+  <div id="toast-container" class="toast-container"></div>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/components.js"></script>
+  <script>
+    mountLayout({ page: 'home' });
+
+    let selectedCompetitionId = null;
+    let selectedCompetitionTitle = null;
+
+    async function loadCompetitions() {
+      const loadingEl = document.getElementById('competitions-loading');
+      const errorEl = document.getElementById('competitions-error');
+      const gridEl = document.getElementById('competitions-grid');
+
+      loadingEl.classList.remove('hidden');
+      errorEl.classList.add('hidden');
+      gridEl.classList.add('hidden');
+
+      try {
+        const data = await CompetitionService.list();
+        const competitions = data.competitions || [];
+
+        loadingEl.classList.add('hidden');
+
+        if (!competitions.length) {
+          gridEl.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-icon">🏁</div>
+              <h3>No competitions yet</h3>
+              <p>Check back soon — new competitions are on the way!</p>
+            </div>`;
+          gridEl.classList.remove('hidden');
+          return;
+        }
+
+        gridEl.innerHTML = competitions.map(c => `
+          <div class="competition-card card card-hover" data-id="${c.id}" data-title="${c.title}">
+            <div class="comp-icon-wrap">🏆</div>
+            <h3 class="comp-title">${c.title}</h3>
+            <p class="comp-desc text-muted text-sm">${c.description || 'Compete and showcase your skills.'}</p>
+            <div class="comp-footer">
+              <span class="comp-price">
+                <span class="price-label">Entry Fee</span>
+                <span class="price-val">${c.price || 'Free'}</span>
+              </span>
+              <span class="badge badge-primary">Open</span>
+            </div>
+          </div>
+        `).join('');
+
+        gridEl.classList.remove('hidden');
+
+        // Selection logic
+        gridEl.querySelectorAll('.competition-card').forEach(card => {
+          card.addEventListener('click', () => {
+            gridEl.querySelectorAll('.competition-card').forEach(c => c.classList.remove('card-selected'));
+            card.classList.add('card-selected');
+            selectedCompetitionId = card.dataset.id;
+            selectedCompetitionTitle = card.dataset.title;
+            CompetitionService.setSelected(selectedCompetitionId);
+            Store.set('selected_competition_title', selectedCompetitionTitle);
+
+            const ctaEl = document.getElementById('register-cta');
+            const nameEl = document.getElementById('selected-comp-name');
+            ctaEl.classList.remove('hidden');
+            nameEl.textContent = selectedCompetitionTitle;
+
+            // Scroll to CTA
+            ctaEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          });
+        });
+
+      } catch (err) {
+        loadingEl.classList.add('hidden');
+        errorEl.classList.remove('hidden');
+        Toast.error('Failed to load', err.message || 'Could not fetch competitions.');
+      }
+    }
+
+    document.getElementById('retry-competitions')?.addEventListener('click', loadCompetitions);
+
+    loadCompetitions();
+  </script>
+</body>
+</html>

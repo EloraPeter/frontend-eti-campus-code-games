@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User Management — ETI Admin</title>
+  <link rel="stylesheet" href="../../css/global.css" />
+  <link rel="stylesheet" href="../../css/admin/admin.global.css" />
+</head>
+<body>
+  <div id="navbar-mount"></div>
+
+  <div class="page-wrapper">
+    <div class="admin-page">
+
+      <aside class="admin-sidebar">
+        <div class="sidebar-section-label">Overview</div>
+        <a href="./dashboard.html" class="sidebar-link"><span class="sl-icon">📊</span> Dashboard</a>
+        <div class="sidebar-section-label">Management</div>
+        <a href="./users.html" class="sidebar-link active"><span class="sl-icon">👥</span> Users</a>
+        <a href="./competitions.html" class="sidebar-link"><span class="sl-icon">🏆</span> Competitions</a>
+        <a href="./payments.html" class="sidebar-link"><span class="sl-icon">💳</span> Payments</a>
+        <div class="sidebar-section-label">System</div>
+        <a href="/pages/index.html" class="sidebar-link"><span class="sl-icon">🌐</span> Public Site</a>
+      </aside>
+
+      <main class="admin-main">
+        <div class="admin-page-header">
+          <div>
+            <h1>User Management</h1>
+            <div class="admin-breadcrumb"><a href="./dashboard.html">Dashboard</a> · Users</div>
+          </div>
+          <div class="flex gap-3">
+            <span id="user-count" class="badge badge-gray" style="font-size:.8rem;padding:6px 12px;">Loading…</span>
+          </div>
+        </div>
+
+        <!-- USERS TABLE -->
+        <div class="admin-card">
+          <div class="admin-card-header">
+            <div class="admin-card-title">👥 All Users</div>
+          </div>
+
+          <!-- TOOLBAR -->
+          <div class="table-toolbar">
+            <div class="search-box">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="user-search" placeholder="Search by name, email or username…" />
+            </div>
+            <select class="filter-select" id="filter-status">
+              <option value="all">All Status</option>
+              <option value="active">✅ Active</option>
+              <option value="inactive">⏳ Inactive</option>
+            </select>
+            <select class="filter-select" id="filter-role">
+              <option value="all">All Roles</option>
+              <option value="admin">🔑 Admin</option>
+              <option value="user">👤 User</option>
+            </select>
+            <button class="btn btn-ghost btn-sm" id="refresh-users-btn" style="margin-left:auto;">🔄 Refresh</button>
+          </div>
+
+          <!-- TABLE -->
+          <div class="data-table-wrap" id="users-table-wrap">
+            <table class="data-table" id="users-table">
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>School</th>
+                  <th>Status</th>
+                  <th>Role</th>
+                  <th>Joined</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="users-tbody">
+                <tr class="table-loading-row">
+                  <td colspan="6">
+                    <div class="table-spinner">
+                      <span class="spinner spinner-dark"></span> Loading users…
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="pagination-wrap" id="users-pagination"></div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- EDIT USER MODAL -->
+  <div class="modal-overlay" id="edit-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">✏️ Edit User</h3>
+        <button class="modal-close" id="edit-modal-close">✕</button>
+      </div>
+      <form id="edit-user-form" novalidate>
+        <input type="hidden" id="edit-user-id" />
+        <div class="form-group modal-form-group">
+          <label class="form-label">Username</label>
+          <div class="input-wrapper"><span class="input-icon">👤</span>
+            <input type="text" id="edit-username" class="form-input" />
+          </div>
+        </div>
+        <div class="form-group modal-form-group">
+          <label class="form-label">Email</label>
+          <div class="input-wrapper"><span class="input-icon">✉️</span>
+            <input type="email" id="edit-email" class="form-input" />
+          </div>
+          <span class="form-error" id="edit-email-err"></span>
+        </div>
+        <div class="form-group modal-form-group">
+          <label class="form-label">Full Name</label>
+          <div class="input-wrapper"><span class="input-icon">🪪</span>
+            <input type="text" id="edit-fullname" class="form-input" />
+          </div>
+        </div>
+        <div class="form-group modal-form-group">
+          <label class="form-label">School / Institution</label>
+          <div class="input-wrapper"><span class="input-icon">🏫</span>
+            <input type="text" id="edit-school" class="form-input" />
+          </div>
+        </div>
+        <div class="form-group modal-form-group">
+          <label class="form-label">Phone</label>
+          <div class="input-wrapper"><span class="input-icon">📱</span>
+            <input type="tel" id="edit-phone" class="form-input" />
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="flex gap-3">
+          <button type="submit" class="btn btn-primary flex-1" id="edit-save-btn">💾 Save Changes</button>
+          <button type="button" class="btn btn-ghost flex-1" id="edit-cancel-btn">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- USER DETAIL MODAL -->
+  <div class="modal-overlay" id="detail-modal">
+    <div class="modal" style="max-width:520px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="detail-modal-title">User Details</h3>
+        <button class="modal-close" id="detail-modal-close">✕</button>
+      </div>
+      <div id="detail-modal-body"></div>
+    </div>
+  </div>
+
+  <div id="footer-mount"></div>
+  <div id="toast-container" class="toast-container"></div>
+
+  <script src="../../js/api.js"></script>
+  <script src="../../js/components.js"></script>
+  <script src="../../js/admin.api.js"></script>
+  <script>
+    if (!requireAdmin()) throw new Error('Admin access required');
+    mountAdminLayout('users');
+
+    let allUsers = [];
+    let filteredUsers = [];
+    let currentPage = 1;
+    const PER_PAGE = 15;
+    const currentAdminUser = AuthService.getUser();
+
+    // ---- LOAD USERS ----
+    async function loadUsers() {
+      const tbody = document.getElementById('users-tbody');
+      tbody.innerHTML = `<tr class="table-loading-row"><td colspan="6"><div class="table-spinner"><span class="spinner spinner-dark"></span> Loading users…</div></td></tr>`;
+
+      try {
+        const data = await AdminUserService.getAll();
+        allUsers = data.users || [];
+        document.getElementById('user-count').textContent = `${allUsers.length} total`;
+        applyFilters();
+      } catch (err) {
+        tbody.innerHTML = `<tr class="table-empty-row"><td colspan="6">😕 Failed to load users. <button class="btn btn-outline btn-sm mt-2" onclick="loadUsers()">Retry</button></td></tr>`;
+        Toast.error('Error', err.message || 'Could not load users.');
+      }
+    }
+
+    // ---- FILTER & SEARCH ----
+    function applyFilters() {
+      const search = document.getElementById('user-search').value.toLowerCase().trim();
+      const status = document.getElementById('filter-status').value;
+      const role = document.getElementById('filter-role').value;
+
+      filteredUsers = allUsers.filter(u => {
+        const matchSearch = !search ||
+          u.username?.toLowerCase().includes(search) ||
+          u.email?.toLowerCase().includes(search) ||
+          u.full_name?.toLowerCase().includes(search);
+        const matchStatus = status === 'all' || (status === 'active' ? u.is_active : !u.is_active);
+        const matchRole = role === 'all' || (role === 'admin' ? u.is_admin : !u.is_admin);
+        return matchSearch && matchStatus && matchRole;
+      });
+
+      currentPage = 1;
+      renderTable();
+    }
+
+    // ---- RENDER TABLE ----
+    function renderTable() {
+      const tbody = document.getElementById('users-tbody');
+      const paginationEl = document.getElementById('users-pagination');
+
+      if (!filteredUsers.length) {
+        tbody.innerHTML = `<tr class="table-empty-row"><td colspan="6">😕 No users found matching your filters.</td></tr>`;
+        paginationEl.innerHTML = '';
+        return;
+      }
+
+      const { items, ...pagInfo } = paginate(filteredUsers, currentPage, PER_PAGE);
+
+      tbody.innerHTML = items.map(u => `
+        <tr data-id="${u.id}">
+          <td>
+            <div class="user-cell">
+              <div class="user-avatar-sm">${(u.username || 'U').charAt(0).toUpperCase()}</div>
+              <div>
+                <div class="td-primary">${u.username}</div>
+                <div class="td-sub">${u.email}</div>
+              </div>
+            </div>
+          </td>
+          <td class="td-sub">${u.school_name || <span style="color:var(--text-light)">—</span>}</td>
+          <td>
+            <span class="badge ${u.is_active ? 'badge-success' : 'badge-warning'}">
+              ${u.is_active ? '✅ Active' : '⏳ Inactive'}
+            </span>
+          </td>
+          <td>
+            ${u.is_admin
+              ? `<span class="badge badge-primary">🔑 Admin</span>`
+              : `<span class="badge badge-gray">👤 User</span>`}
+          </td>
+          <td class="text-xs text-muted">${new Date(u.created_at).toLocaleDateString('en-NG', { day:'numeric', month:'short', year:'numeric' })}</td>
+          <td>
+            <div class="table-actions">
+              <button class="action-btn" title="View details" data-action="view" data-id="${u.id}">👁</button>
+              <button class="action-btn" title="Edit user" data-action="edit" data-id="${u.id}">✏️</button>
+              ${u.is_active
+                ? `<button class="action-btn" title="Deactivate" data-action="deactivate" data-id="${u.id}">🔒</button>`
+                : `<button class="action-btn success" title="Activate" data-action="activate" data-id="${u.id}">🔓</button>`}
+              ${u.is_admin
+                ? `<button class="action-btn" title="Remove admin" data-action="remove-admin" data-id="${u.id}" ${u.id === currentAdminUser?.id ? 'disabled title="Cannot remove yourself"' : ''}>👤</button>`
+                : `<button class="action-btn" title="Make admin" data-action="make-admin" data-id="${u.id}">🔑</button>`}
+              <button class="action-btn danger" title="Delete user" data-action="delete" data-id="${u.id}">🗑</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+
+      renderPagination(paginationEl, pagInfo, (p) => { currentPage = p; renderTable(); });
+
+      // Bind row actions
+      tbody.querySelectorAll('[data-action]').forEach(btn => {
+        btn.addEventListener('click', handleAction);
+      });
+    }
+
+    // ---- ACTION HANDLER ----
+    async function handleAction(e) {
+      const btn = e.currentTarget;
+      const action = btn.dataset.action;
+      const id = btn.dataset.id;
+      const user = allUsers.find(u => u.id === id);
+      if (!user) return;
+
+      switch (action) {
+        case 'view': openDetailModal(user); break;
+        case 'edit': openEditModal(user); break;
+        case 'activate': await doPermission(id, 'activate', user.username); break;
+        case 'deactivate': await doPermission(id, 'deactivate', user.username); break;
+        case 'make-admin': await doPermission(id, 'make-admin', user.username); break;
+        case 'remove-admin': await doPermission(id, 'remove-admin', user.username); break;
+        case 'delete': await doDelete(id, user.username); break;
+      }
+    }
+
+    // ---- PERMISSIONS ----
+    async function doPermission(id, type, username) {
+      const labels = {
+        activate: { title: `Activate ${username}?`, msg: `This will activate ${username}'s account, giving them full access.`, confirm: '✅ Activate' },
+        deactivate: { title: `Deactivate ${username}?`, msg: `This will deactivate ${username}'s account.`, confirm: '🔒 Deactivate', danger: true },
+        'make-admin': { title: `Promote ${username} to Admin?`, msg: `${username} will get full admin access. This is a significant action.`, confirm: '🔑 Make Admin' },
+        'remove-admin': { title: `Remove admin from ${username}?`, msg: `${username} will lose admin privileges.`, confirm: '👤 Remove Admin', danger: true },
+      };
+      const lbl = labels[type];
+      const confirmed = await confirmAction({ title: lbl.title, message: lbl.msg, confirmText: lbl.confirm, danger: !!lbl.danger });
+      if (!confirmed) return;
+
+      try {
+        const fnMap = { activate: AdminPermissionService.activate, deactivate: AdminPermissionService.deactivate, 'make-admin': AdminPermissionService.makeAdmin, 'remove-admin': AdminPermissionService.removeAdmin };
+        const res = await fnMap[type](id);
+        // Update local state
+        const idx = allUsers.findIndex(u => u.id === id);
+        if (idx >= 0 && res.user) allUsers[idx] = { ...allUsers[idx], ...res.user };
+        Toast.success('Done', res.message || 'Action completed.');
+        applyFilters();
+      } catch (err) {
+        Toast.error('Action failed', err.message || 'Could not complete this action.');
+      }
+    }
+
+    // ---- DELETE ----
+    async function doDelete(id, username) {
+      const confirmed = await confirmAction({
+        title: `Delete ${username}?`,
+        message: `This will permanently delete the account for <strong>${username}</strong>. This cannot be undone.`,
+        confirmText: '🗑 Delete Permanently',
+        danger: true
+      });
+      if (!confirmed) return;
+
+      try {
+        await AdminUserService.delete(id);
+        allUsers = allUsers.filter(u => u.id !== id);
+        Toast.success('Deleted', `${username} has been removed.`);
+        applyFilters();
+      } catch (err) {
+        Toast.error('Delete failed', err.message || 'Could not delete user.');
+      }
+    }
+
+    // ---- VIEW DETAIL MODAL ----
+    function openDetailModal(user) {
+      document.getElementById('detail-modal-title').textContent = `👤 ${user.username}`;
+      document.getElementById('detail-modal-body').innerHTML = `
+        <div class="flex items-center gap-4 mb-6">
+          <div class="user-avatar-sm" style="width:52px;height:52px;font-size:1.3rem;border-radius:12px;">${(user.username || 'U').charAt(0).toUpperCase()}</div>
+          <div>
+            <div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:1.1rem;">${user.full_name || user.username}</div>
+            <div style="color:var(--text-muted);font-size:.85rem;">@${user.username}</div>
+            <div class="flex gap-2 mt-2">
+              <span class="badge ${user.is_active ? 'badge-success' : 'badge-warning'}">${user.is_active ? 'Active' : 'Inactive'}</span>
+              ${user.is_admin ? '<span class="badge badge-primary">Admin</span>' : ''}
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0;">
+          ${[
+            ['Email', user.email],
+            ['Phone', user.phone || '—'],
+            ['School', user.school_name || '—'],
+            ['Joined', new Date(user.created_at).toLocaleDateString('en-NG', { weekday:'short', year:'numeric', month:'long', day:'numeric' })],
+          ].map(([k, v]) => `
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);font-size:.88rem;">
+              <span style="font-family:'Montserrat',sans-serif;font-weight:600;font-size:.78rem;text-transform:uppercase;letter-spacing:.04em;color:var(--text-light);">${k}</span>
+              <span style="color:var(--text);">${v}</span>
+            </div>`).join('')}
+        </div>
+        <div class="flex gap-3 mt-6">
+          <button class="btn btn-outline flex-1" onclick="openEditModal(allUsers.find(u=>u.id==='${user.id}'));closeModal('detail-modal')">✏️ Edit</button>
+          <button class="btn btn-ghost flex-1" onclick="closeModal('detail-modal')">Close</button>
+        </div>
+      `;
+      document.getElementById('detail-modal').classList.add('open');
+    }
+
+    // ---- EDIT MODAL ----
+    function openEditModal(user) {
+      document.getElementById('edit-user-id').value = user.id;
+      document.getElementById('edit-username').value = user.username || '';
+      document.getElementById('edit-email').value = user.email || '';
+      document.getElementById('edit-fullname').value = user.full_name || '';
+      document.getElementById('edit-school').value = user.school_name || '';
+      document.getElementById('edit-phone').value = user.phone || '';
+      document.getElementById('edit-modal').classList.add('open');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('open');
+    }
+
+    document.getElementById('edit-modal-close').addEventListener('click', () => closeModal('edit-modal'));
+    document.getElementById('edit-cancel-btn').addEventListener('click', () => closeModal('edit-modal'));
+    document.getElementById('detail-modal-close').addEventListener('click', () => closeModal('detail-modal'));
+
+    // Close on overlay click
+    ['edit-modal', 'detail-modal'].forEach(id => {
+      document.getElementById(id).addEventListener('click', (e) => {
+        if (e.target.id === id) closeModal(id);
+      });
+    });
+
+    // ---- EDIT FORM SUBMIT ----
+    document.getElementById('edit-user-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = document.getElementById('edit-user-id').value;
+      const emailInput = document.getElementById('edit-email');
+      if (!validateField(emailInput, [Validators.required, Validators.email])) return;
+
+      const payload = {
+        username: document.getElementById('edit-username').value.trim(),
+        email: emailInput.value.trim(),
+        full_name: document.getElementById('edit-fullname').value.trim(),
+        school_name: document.getElementById('edit-school').value.trim(),
+        phone: document.getElementById('edit-phone').value.trim() || null,
+      };
+
+      const btn = document.getElementById('edit-save-btn');
+      setButtonLoading(btn, true);
+
+      try {
+        const res = await AdminUserService.update(id, payload);
+        const idx = allUsers.findIndex(u => u.id === id);
+        if (idx >= 0 && res.user) allUsers[idx] = { ...allUsers[idx], ...res.user };
+        Toast.success('Updated', res.message || 'User updated successfully.');
+        closeModal('edit-modal');
+        applyFilters();
+      } catch (err) {
+        Toast.error('Update failed', err.message || 'Could not update user.');
+      } finally {
+        setButtonLoading(btn, false);
+      }
+    });
+
+    // ---- FILTER EVENTS ----
+    document.getElementById('user-search').addEventListener('input', applyFilters);
+    document.getElementById('filter-status').addEventListener('change', applyFilters);
+    document.getElementById('filter-role').addEventListener('change', applyFilters);
+    document.getElementById('refresh-users-btn').addEventListener('click', loadUsers);
+
+    // Pre-apply filter from URL param
+    const urlFilter = new URLSearchParams(window.location.search).get('filter');
+    if (urlFilter === 'inactive') {
+      document.getElementById('filter-status').value = 'inactive';
+    }
+
+    loadUsers();
+  </script>
+</body>
+</html>

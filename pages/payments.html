@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Payments — ETI</title>
+  <link rel="stylesheet" href="../css/global.css" />
+  <link rel="stylesheet" href="../css/payments.css" />
+</head>
+<body>
+  <div id="navbar-mount"></div>
+
+  <main class="page-wrapper">
+    <div class="container" style="padding-top:40px;padding-bottom:80px;">
+
+      <div class="page-header mb-8">
+        <div>
+          <h1>Payment History</h1>
+          <p class="text-muted mt-1">Track all your competition payments and their status.</p>
+        </div>
+        <a href="./dashboard.html" class="btn btn-ghost">← Dashboard</a>
+      </div>
+
+      <!-- SUMMARY CARDS -->
+      <div id="payment-summary" class="pay-summary-row mb-8">
+        <div class="pay-summary-card skeleton-box" style="height:100px;"></div>
+        <div class="pay-summary-card skeleton-box" style="height:100px;"></div>
+        <div class="pay-summary-card skeleton-box" style="height:100px;"></div>
+      </div>
+
+      <!-- PAYMENTS TABLE / LIST -->
+      <div class="card" id="payments-container">
+        <div class="card-head mb-6">
+          <h3>All Transactions</h3>
+          <div class="pay-filter-group" id="pay-filter-group">
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="success">✅ Paid</button>
+            <button class="filter-btn" data-filter="pending">⏳ Pending</button>
+          </div>
+        </div>
+
+        <!-- Loading -->
+        <div id="pay-loading">
+          <div class="pay-row-skeleton"></div>
+          <div class="pay-row-skeleton"></div>
+          <div class="pay-row-skeleton"></div>
+        </div>
+
+        <!-- Error -->
+        <div id="pay-error" class="hidden">
+          <div class="empty-state">
+            <div class="empty-icon">😕</div>
+            <h3>Failed to load payments</h3>
+            <p>Could not retrieve your payment history.</p>
+            <button class="btn btn-outline mt-4" id="retry-pay-btn">🔄 Retry</button>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div id="pay-table" class="hidden"></div>
+      </div>
+
+    </div>
+  </main>
+
+  <div id="footer-mount"></div>
+  <div id="toast-container" class="toast-container"></div>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/components.js"></script>
+  <script>
+    if (!requireAuth()) throw new Error('Not authenticated');
+    mountLayout({ page: 'payments' });
+
+    let allPayments = [];
+    let currentFilter = 'all';
+
+    function renderPayments(payments) {
+      const table = document.getElementById('pay-table');
+
+      if (!payments.length) {
+        table.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">💳</div>
+            <h3>${currentFilter === 'all' ? 'No payments yet' : `No ${currentFilter} payments`}</h3>
+            <p>${currentFilter === 'all' ? 'When you register for a competition, your payment history will appear here.' : 'Try a different filter.'}</p>
+            ${currentFilter === 'all' ? `<a href="./competitions.html" class="btn btn-primary mt-4">Browse Competitions</a>` : ''}
+          </div>`;
+        table.classList.remove('hidden');
+        return;
+      }
+
+      table.innerHTML = `
+        <div class="pay-list">
+          ${payments.map(p => `
+            <div class="pay-item ${p.status}">
+              <div class="pay-item-icon">
+                ${p.status === 'success' ? '✅' : '⏳'}
+              </div>
+              <div class="pay-item-body">
+                <div class="pay-item-title">${p.competition_title || 'Competition Registration'}</div>
+                <div class="pay-item-ref text-xs text-muted">Ref: ${p.payment_reference || '—'}</div>
+                <div class="pay-item-date text-xs text-light">
+                  ${p.paid_at
+                    ? `Paid on ${new Date(p.paid_at).toLocaleDateString('en-NG', { weekday:'short', year:'numeric', month:'short', day:'numeric' })}`
+                    : `Created ${new Date(p.created_at).toLocaleDateString('en-NG', { month:'short', day:'numeric', year:'numeric' })}`
+                  }
+                </div>
+              </div>
+              <div class="pay-item-right">
+                <div class="pay-item-amount">${p.amount}</div>
+                <span class="badge ${p.status === 'success' ? 'badge-success' : 'badge-warning'}">
+                  ${p.status === 'success' ? 'Completed' : 'Awaiting Payment'}
+                </span>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+      table.classList.remove('hidden');
+    }
+
+    function applyFilter(filter) {
+      currentFilter = filter;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.dataset.filter === filter));
+      const filtered = filter === 'all' ? allPayments : allPayments.filter(p => p.status === filter);
+      renderPayments(filtered);
+    }
+
+    async function loadPayments() {
+      const loadEl = document.getElementById('pay-loading');
+      const errEl = document.getElementById('pay-error');
+      const tableEl = document.getElementById('pay-table');
+
+      loadEl.classList.remove('hidden');
+      errEl.classList.add('hidden');
+      tableEl.classList.add('hidden');
+
+      try {
+        const data = await PaymentService.getMyPayments();
+        allPayments = data.payments || [];
+
+        // Summary
+        const total = allPayments.length;
+        const paid = allPayments.filter(p => p.status === 'success').length;
+        const pending = allPayments.filter(p => p.status === 'pending').length;
+
+        document.getElementById('payment-summary').innerHTML = `
+          <div class="pay-summary-card">
+            <div class="psc-icon">📋</div>
+            <div class="psc-val">${total}</div>
+            <div class="psc-lbl">Total Transactions</div>
+          </div>
+          <div class="pay-summary-card success">
+            <div class="psc-icon">✅</div>
+            <div class="psc-val">${paid}</div>
+            <div class="psc-lbl">Completed</div>
+          </div>
+          <div class="pay-summary-card pending">
+            <div class="psc-icon">⏳</div>
+            <div class="psc-val">${pending}</div>
+            <div class="psc-lbl">Pending</div>
+          </div>
+        `;
+
+        loadEl.classList.add('hidden');
+        renderPayments(allPayments);
+
+        // Filter buttons
+        document.getElementById('pay-filter-group').querySelectorAll('.filter-btn').forEach(btn => {
+          btn.addEventListener('click', () => applyFilter(btn.dataset.filter));
+        });
+
+      } catch (err) {
+        loadEl.classList.add('hidden');
+        errEl.classList.remove('hidden');
+        Toast.error('Failed to load', err.message || 'Could not get payment history.');
+      }
+    }
+
+    document.getElementById('retry-pay-btn')?.addEventListener('click', loadPayments);
+    loadPayments();
+  </script>
+</body>
+</html>

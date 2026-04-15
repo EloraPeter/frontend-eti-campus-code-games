@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Competitions — ETI Admin</title>
+  <link rel="stylesheet" href="../../css/global.css" />
+  <link rel="stylesheet" href="../../css/admin/admin.global.css" />
+</head>
+<body>
+  <div id="navbar-mount"></div>
+
+  <div class="page-wrapper">
+    <div class="admin-page">
+
+      <aside class="admin-sidebar">
+        <div class="sidebar-section-label">Overview</div>
+        <a href="./dashboard.html" class="sidebar-link"><span class="sl-icon">📊</span> Dashboard</a>
+        <div class="sidebar-section-label">Management</div>
+        <a href="./users.html" class="sidebar-link"><span class="sl-icon">👥</span> Users</a>
+        <a href="./competitions.html" class="sidebar-link active"><span class="sl-icon">🏆</span> Competitions</a>
+        <a href="./payments.html" class="sidebar-link"><span class="sl-icon">💳</span> Payments</a>
+        <div class="sidebar-section-label">System</div>
+        <a href="/pages/index.html" class="sidebar-link"><span class="sl-icon">🌐</span> Public Site</a>
+      </aside>
+
+      <main class="admin-main">
+        <div class="admin-page-header">
+          <div>
+            <h1>Competitions</h1>
+            <div class="admin-breadcrumb"><a href="./dashboard.html">Dashboard</a> · Competitions</div>
+          </div>
+          <button class="btn btn-primary" id="new-comp-btn">＋ New Competition</button>
+        </div>
+
+        <!-- COMPETITIONS GRID -->
+        <div id="comp-loading" class="comp-admin-grid">
+          <div class="comp-skeleton"></div>
+          <div class="comp-skeleton"></div>
+          <div class="comp-skeleton"></div>
+        </div>
+
+        <div id="comp-error" class="hidden">
+          <div class="empty-state card">
+            <div class="empty-icon">😕</div>
+            <h3>Failed to load competitions</h3>
+            <button class="btn btn-outline mt-4" id="retry-comp">🔄 Retry</button>
+          </div>
+        </div>
+
+        <div id="comp-grid" class="comp-admin-grid hidden"></div>
+      </main>
+    </div>
+  </div>
+
+  <!-- CREATE / EDIT COMPETITION MODAL -->
+  <div class="modal-overlay" id="comp-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title" id="comp-modal-title">🏆 New Competition</h3>
+        <button class="modal-close" id="comp-modal-close">✕</button>
+      </div>
+      <form id="comp-form" novalidate>
+        <input type="hidden" id="comp-edit-id" />
+        <div class="form-group">
+          <label class="form-label">Title <span style="color:#e05252">*</span></label>
+          <div class="input-wrapper">
+            <span class="input-icon">📛</span>
+            <input type="text" id="comp-title" class="form-input" placeholder="e.g. Web Development Challenge 2025" required />
+          </div>
+          <span class="form-error" id="comp-title-err"></span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description <span style="color:#e05252">*</span></label>
+          <textarea id="comp-desc" class="form-input" rows="4" placeholder="Describe the competition, rules, prizes…" style="resize:vertical;" required></textarea>
+          <span class="form-error" id="comp-desc-err"></span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Entry Fee / Price <span style="color:#e05252">*</span></label>
+          <div class="input-wrapper">
+            <span class="input-icon">💰</span>
+            <input type="text" id="comp-price" class="form-input" placeholder="e.g. ₦2,000 or Free" required />
+          </div>
+          <span class="form-hint">Enter the price as displayed to users (e.g. "₦2,000" or "Free").</span>
+          <span class="form-error" id="comp-price-err"></span>
+        </div>
+        <div class="flex gap-3 mt-2">
+          <button type="submit" class="btn btn-primary flex-1" id="comp-save-btn">💾 Save Competition</button>
+          <button type="button" class="btn btn-ghost flex-1" id="comp-cancel-btn">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="footer-mount"></div>
+  <div id="toast-container" class="toast-container"></div>
+
+  <style>
+    .comp-admin-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 20px;
+    }
+
+    .comp-skeleton {
+      height: 200px;
+      background: linear-gradient(90deg, var(--bg-soft) 25%, var(--border) 50%, var(--bg-soft) 75%);
+      background-size: 200% 100%;
+      border-radius: var(--radius-lg);
+      border: 1.5px solid var(--border);
+      animation: shimmer 1.5s infinite;
+    }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+    .comp-admin-card {
+      background: var(--bg-card);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: box-shadow var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .comp-admin-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+    }
+
+    .comp-admin-card:hover { box-shadow: var(--shadow-md); }
+
+    .cac-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .cac-icon { font-size: 1.8rem; }
+    .cac-title { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 1rem; margin-bottom: 4px; }
+    .cac-desc { font-size: .85rem; color: var(--text-muted); line-height: 1.6; flex: 1;
+      display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .cac-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 14px; border-top: 1px solid var(--border); margin-top: auto; }
+    .cac-price { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 1rem; color: var(--primary); }
+    .cac-date { font-size: .75rem; color: var(--text-light); }
+  </style>
+
+  <script src="../../js/api.js"></script>
+  <script src="../../js/components.js"></script>
+  <script src="../../js/admin.api.js"></script>
+  <script>
+    if (!requireAdmin()) throw new Error('Admin access required');
+    mountAdminLayout('competitions');
+
+    let competitions = [];
+    const ICONS = ['💻', '🤖', '🎨', '🧠', '⚡', '🔬', '🌐', '🎯', '📐', '🧩'];
+
+    async function loadCompetitions() {
+      const loadEl = document.getElementById('comp-loading');
+      const errEl = document.getElementById('comp-error');
+      const gridEl = document.getElementById('comp-grid');
+
+      loadEl.classList.remove('hidden');
+      errEl.classList.add('hidden');
+      gridEl.classList.add('hidden');
+
+      try {
+        const data = await CompetitionService.list();
+        competitions = data.competitions || [];
+        loadEl.classList.add('hidden');
+        renderCompetitions();
+      } catch (err) {
+        loadEl.classList.add('hidden');
+        errEl.classList.remove('hidden');
+        Toast.error('Error', err.message || 'Could not load competitions.');
+      }
+    }
+
+    function renderCompetitions() {
+      const gridEl = document.getElementById('comp-grid');
+      if (!competitions.length) {
+        gridEl.innerHTML = `
+          <div class="empty-state" style="grid-column:1/-1;background:var(--bg-card);border:1.5px solid var(--border);border-radius:var(--radius-lg);padding:64px 32px;">
+            <div class="empty-icon">🏁</div>
+            <h3>No competitions yet</h3>
+            <p>Create your first competition to get started.</p>
+            <button class="btn btn-primary mt-4" id="empty-new-btn">＋ Create Competition</button>
+          </div>`;
+        gridEl.classList.remove('hidden');
+        document.getElementById('empty-new-btn')?.addEventListener('click', () => openModal());
+        return;
+      }
+
+      gridEl.innerHTML = competitions.map((c, i) => `
+        <div class="comp-admin-card">
+          <div class="cac-header">
+            <span class="cac-icon">${ICONS[i % ICONS.length]}</span>
+            <div class="table-actions">
+              <button class="action-btn" data-action="edit" data-id="${c.id}" title="Edit">✏️</button>
+              <button class="action-btn danger" data-action="delete" data-id="${c.id}" title="Delete">🗑</button>
+            </div>
+          </div>
+          <div class="cac-title">${c.title}</div>
+          <div class="cac-desc">${c.description || 'No description provided.'}</div>
+          <div class="cac-footer">
+            <span class="cac-price">${c.price || 'Free'}</span>
+            <span class="cac-date">Created ${new Date(c.created_at).toLocaleDateString('en-NG', { month:'short', day:'numeric', year:'numeric' })}</span>
+          </div>
+        </div>
+      `).join('');
+
+      gridEl.classList.remove('hidden');
+
+      gridEl.querySelectorAll('[data-action]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const id = btn.dataset.id;
+          const comp = competitions.find(c => c.id === id);
+          if (!comp) return;
+
+          if (btn.dataset.action === 'edit') {
+            openModal(comp);
+          } else if (btn.dataset.action === 'delete') {
+            const confirmed = await confirmAction({
+              title: `Delete "${comp.title}"?`,
+              message: `This will permanently remove this competition. All registrations linked to it may be affected.`,
+              confirmText: '🗑 Delete',
+              danger: true
+            });
+            if (!confirmed) return;
+            try {
+              await AdminCompetitionService.delete(id);
+              competitions = competitions.filter(c => c.id !== id);
+              renderCompetitions();
+              Toast.success('Deleted', `"${comp.title}" has been removed.`);
+            } catch (err) {
+              Toast.error('Failed', err.message || 'Could not delete competition.');
+            }
+          }
+        });
+      });
+    }
+
+    // ---- MODAL ----
+    function openModal(comp = null) {
+      const isEdit = !!comp;
+      document.getElementById('comp-modal-title').textContent = isEdit ? `✏️ Edit Competition` : `🏆 New Competition`;
+      document.getElementById('comp-edit-id').value = comp?.id || '';
+      document.getElementById('comp-title').value = comp?.title || '';
+      document.getElementById('comp-desc').value = comp?.description || '';
+      document.getElementById('comp-price').value = comp?.price || '';
+      document.getElementById('comp-modal').classList.add('open');
+    }
+
+    function closeModal() {
+      document.getElementById('comp-modal').classList.remove('open');
+    }
+
+    document.getElementById('new-comp-btn').addEventListener('click', () => openModal());
+    document.getElementById('comp-modal-close').addEventListener('click', closeModal);
+    document.getElementById('comp-cancel-btn').addEventListener('click', closeModal);
+    document.getElementById('comp-modal').addEventListener('click', (e) => { if (e.target.id === 'comp-modal') closeModal(); });
+
+    // ---- FORM SUBMIT ----
+    document.getElementById('comp-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const titleInput = document.getElementById('comp-title');
+      const descInput = document.getElementById('comp-desc');
+      const priceInput = document.getElementById('comp-price');
+
+      let valid = true;
+      valid = validateField(titleInput, [Validators.required]) && valid;
+      valid = validateField(descInput, [Validators.required]) && valid;
+      valid = validateField(priceInput, [Validators.required]) && valid;
+      if (!valid) return;
+
+      const editId = document.getElementById('comp-edit-id').value;
+      const payload = {
+        title: titleInput.value.trim(),
+        description: descInput.value.trim(),
+        price: priceInput.value.trim(),
+      };
+
+      const btn = document.getElementById('comp-save-btn');
+      setButtonLoading(btn, true);
+
+      try {
+        if (editId) {
+          const res = await AdminCompetitionService.update(editId, payload);
+          const idx = competitions.findIndex(c => c.id === editId);
+          if (idx >= 0 && res.competition) competitions[idx] = res.competition;
+          Toast.success('Updated', res.message || 'Competition updated.');
+        } else {
+          const res = await AdminCompetitionService.create(payload);
+          if (res.competition) competitions.unshift(res.competition);
+          Toast.success('Created', res.message || 'Competition created!');
+        }
+        closeModal();
+        renderCompetitions();
+      } catch (err) {
+        Toast.error('Failed', err.message || 'Could not save competition.');
+      } finally {
+        setButtonLoading(btn, false);
+      }
+    });
+
+    document.getElementById('retry-comp')?.addEventListener('click', loadCompetitions);
+    loadCompetitions();
+  </script>
+</body>
+</html>
